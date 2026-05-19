@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+models/
+data/
+.env
+*.log
+.codex/
+디자인 템플릿/
+*.pdf
+*.hwp

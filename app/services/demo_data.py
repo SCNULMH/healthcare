@@ -1,0 +1,30 @@
+def demo_profile() -> dict:
+    return {
+        "health": {
+            "age": 43,
+            "sex": "male",
+            "height_cm": 172,
+            "weight_kg": 82,
+            "waist_cm": 93,
+            "systolic_bp": 132,
+            "diastolic_bp": 86,
+            "fasting_glucose": 132,
+            "total_cholesterol": 218,
+            "hdl": 42,
+            "ldl": 138,
+            "triglyceride": 185,
+        },
+        "lifestyle": {
+            "breakfast": "sometimes",
+            "sugary_drinks_per_week": 7,
+            "late_meals_per_week": 3,
+            "exercise_per_week": 1,
+            "eating_out_per_week": 5,
+            "sleep_hours": 6,
+            "avg_steps": 4300,
+            "smoking": "past",
+            "drinking": "moderate",
+            "available_minutes_per_day": 15,
+            "can_prepare_meals": False,
+        },
+    }

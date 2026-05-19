@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: checkup-ai-reset-coach
+    runtime: python
+    repo: https://github.com/SCNULMH/healthcare.git
+    branch: main
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health/ready
+    plan: free
+    autoDeployTrigger: off
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.13
+      - key: PUBLIC_DATA_SERVICE_KEY
+        sync: false
+      - key: PUBLIC_DATA_BASE_URL
+        value: https://api.odcloud.kr/api
+      - key: USE_DEMO_DATA
+        value: "false"
+      - key: REQUEST_TIMEOUT_SECONDS
+        value: "8"
