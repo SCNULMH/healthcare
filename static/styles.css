@@ -545,8 +545,11 @@ select:focus {
   bottom: 16px;
   z-index: 10;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  grid-auto-flow: column;
+  grid-auto-columns: 62px;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
   border: 1px solid rgba(226, 232, 240, 0.92);
   border-radius: 26px;
   background: rgba(255, 255, 255, 0.94);
@@ -555,11 +558,15 @@ select:focus {
   backdrop-filter: blur(16px);
 }
 
+.bottom-nav::-webkit-scrollbar {
+  display: none;
+}
+
 .bottom-nav button {
   display: grid;
   gap: 4px;
   place-items: center;
-  min-height: 52px;
+  min-height: 54px;
   border: 0;
   border-radius: 20px;
   background: transparent;
@@ -569,11 +576,23 @@ select:focus {
 }
 
 .bottom-nav span {
-  font-size: 18px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .bottom-nav .active {
   background: var(--brand);
+  color: white;
+}
+
+.bottom-nav .active span {
+  background: rgba(255, 255, 255, 0.22);
   color: white;
 }
 

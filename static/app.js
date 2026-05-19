@@ -61,10 +61,7 @@ function goToScreen(name) {
 
   document.querySelectorAll(".bottom-nav button").forEach((button) => {
     const target = button.dataset.screenTarget;
-    const active =
-      target === name ||
-      (target === "checkup" && ["basic", "checkup", "activity", "lifestyle"].includes(name));
-    button.classList.toggle("active", active);
+    button.classList.toggle("active", target === name);
   });
 }
 
