@@ -42,6 +42,12 @@ const levelLabels = {
   normal: "안정",
 };
 
+const levelDescriptions = {
+  high: "우선 관리가 필요합니다",
+  caution: "생활패턴 조정이 필요합니다",
+  normal: "현재 입력값은 안정권입니다",
+};
+
 function readPayload() {
   const data = new FormData(form);
   const health = {};
@@ -80,14 +86,21 @@ function fillForm(payload) {
 }
 
 function render(data) {
+  const primaryRisk = [...data.risks].sort((a, b) => b.probability - a.probability)[0];
+  const completedSteps = [
+    "검진 수치 정규화 완료",
+    "위험 요인 가중치 계산 완료",
+    "퍼스널 개선 플랜 생성 완료",
+  ];
+
   const risks = data.risks
     .map(
       (risk) => `
-        <article class="risk-card ${risk.level}">
+        <article class="risk-card analysis-risk-card ${risk.level}">
           <div class="risk-card-top">
             <div>
               <strong>${risk.label}</strong>
-              <p class="risk-subtitle">검진 수치와 생활패턴 기반</p>
+              <p class="risk-subtitle">${levelDescriptions[risk.level]}</p>
             </div>
             <span class="risk-level ${risk.level}">${levelLabels[risk.level] || risk.level}</span>
           </div>
@@ -114,21 +127,65 @@ function render(data) {
   const goals = data.plan.weekly_goals.map((goal) => `<li>${goal}</li>`).join("");
 
   result.innerHTML = `
-    <section class="result-card">
+    <section class="analysis-screen">
+      <div class="analysis-topbar">
+        <div class="analysis-title">
+          <span class="analysis-symbol">AI</span>
+          <strong>분석 엔진</strong>
+        </div>
+        <span class="live-pill"><i></i> LIVE</span>
+      </div>
+
+      <div class="analysis-hero-result">
+        <div class="analysis-orb-wrap">
+          <span class="pulse-ring ring-a"></span>
+          <span class="pulse-ring ring-b"></span>
+          <div class="analysis-orb" style="--progress:${primaryRisk.probability}%">
+            <div class="analysis-orb-core">
+              <span>${primaryRisk.probability}</span>
+              <small>%</small>
+            </div>
+          </div>
+        </div>
+        <div class="analysis-copy">
+          <span class="source-chip">Step 3 · 결과 산출 완료</span>
+          <h2>${primaryRisk.label} 가능성이 가장 크게 예측되었습니다.</h2>
+          <p>${primaryRisk.summary} BMI ${data.bmi}와 검진 수치, 생활패턴을 함께 반영했습니다.</p>
+        </div>
+      </div>
+
+      <div class="analysis-status-grid">
+        ${completedSteps
+          .map(
+            (step) => `
+              <div class="analysis-step done">
+                <span>✓</span>
+                <div>
+                  <strong>${step}</strong>
+                  <p>입력값 기반 분석 파이프라인 통과</p>
+                </div>
+              </div>
+            `,
+          )
+          .join("")}
+      </div>
+    </section>
+
+    <section class="result-card analysis-result-card">
       <div class="result-card-header">
         <div>
-          <p class="eyebrow">Step 3</p>
-          <h2>위험예측 결과</h2>
+          <p class="eyebrow blue">Risk Matrix</p>
+          <h2>질환별 위험도 분석</h2>
         </div>
         <span class="source-chip">BMI ${data.bmi}</span>
       </div>
       <p class="muted">${data.disclaimer}</p>
       <div class="risk-grid">${risks}</div>
     </section>
-    <section class="result-card">
+    <section class="result-card analysis-result-card">
       <div class="result-card-header">
         <div>
-          <p class="eyebrow">Today</p>
+          <p class="eyebrow blue">Personal Plan</p>
           <h2>오늘의 작은 개선</h2>
         </div>
         <span class="source-chip">${data.plan.today_actions.length}건</span>
@@ -140,10 +197,10 @@ function render(data) {
       </div>
       <div class="actions">${actions}</div>
     </section>
-    <section class="result-card">
+    <section class="result-card analysis-result-card">
       <div class="result-card-header">
         <div>
-          <p class="eyebrow">Week</p>
+          <p class="eyebrow blue">Weekly Goal</p>
           <h2>1주 목표</h2>
         </div>
         <span class="source-chip">체크리스트</span>
@@ -154,9 +211,65 @@ function render(data) {
   `;
 }
 
+function renderAnalysisLoading() {
+  result.innerHTML = `
+    <section class="analysis-screen loading">
+      <div class="analysis-topbar">
+        <div class="analysis-title">
+          <span class="analysis-symbol">AI</span>
+          <strong>분석 엔진</strong>
+        </div>
+        <span class="live-pill"><i></i> LIVE STREAM</span>
+      </div>
+
+      <div class="analysis-loading-center">
+        <div class="analysis-orb-wrap">
+          <span class="pulse-ring ring-a"></span>
+          <span class="pulse-ring ring-b"></span>
+          <div class="analysis-orb loading-orb" style="--progress:45%">
+            <div class="analysis-orb-core">
+              <span class="analysis-symbol big">AI</span>
+            </div>
+          </div>
+        </div>
+        <div class="analysis-copy center">
+          <h2>분석 중...</h2>
+          <p>검진 수치와 생활패턴을 기반으로 위험 요인과 실천 플랜을 계산하고 있습니다.</p>
+        </div>
+      </div>
+
+      <div class="analysis-status-list">
+        <div class="analysis-step done">
+          <span>✓</span>
+          <div>
+            <strong>데이터 수집 완료</strong>
+            <p>검진 수치와 생활패턴 입력값을 확인했습니다.</p>
+          </div>
+        </div>
+        <div class="analysis-step active">
+          <span>↻</span>
+          <div>
+            <strong>위험도 계산 중</strong>
+            <p>공복혈당, 혈압, 지질, BMI, 활동량 요인을 분석합니다.</p>
+          </div>
+        </div>
+        <div class="analysis-step">
+          <span>···</span>
+          <div>
+            <strong>퍼스널 플랜 생성 대기</strong>
+            <p>무리 없는 하루 행동과 1주 목표를 정리합니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+  result.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
+    renderAnalysisLoading();
     const response = await fetch("/risk/predict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
