@@ -1,11 +1,17 @@
 const form = document.querySelector("#risk-form");
 const result = document.querySelector("#result");
+const screenTitle = document.querySelector("#screen-title");
+const navButtons = [...document.querySelectorAll("[data-screen-target]")];
+const backButton = document.querySelector("[data-back]");
 const loadDemo = document.querySelector("#load-demo");
 const loadPublicSample = document.querySelector("#load-public-sample");
 const publicSampleStatus = document.querySelector("#public-sample-status");
 const ocrDemo = document.querySelector("#ocr-demo");
 const ocrStatus = document.querySelector("#ocr-status");
 const ocrFile = document.querySelector("#ocr-file");
+
+const screenOrder = ["home", "basic", "checkup", "activity", "lifestyle", "ocr", "result"];
+let currentScreen = "home";
 
 const healthFields = [
   "age",
@@ -42,11 +48,32 @@ const levelLabels = {
   normal: "안정",
 };
 
-const levelDescriptions = {
-  high: "우선 관리가 필요합니다",
-  caution: "생활패턴 조정이 필요합니다",
-  normal: "현재 입력값은 안정권입니다",
-};
+function goToScreen(name) {
+  const next = document.querySelector(`#screen-${name}`);
+  if (!next) return;
+
+  document.querySelectorAll(".screen").forEach((screen) => {
+    screen.classList.toggle("active", screen === next);
+  });
+
+  currentScreen = name;
+  screenTitle.textContent = next.dataset.title || "검진AI 리셋코치";
+
+  document.querySelectorAll(".bottom-nav button").forEach((button) => {
+    const target = button.dataset.screenTarget;
+    const active =
+      target === name ||
+      (target === "checkup" && ["basic", "checkup", "activity", "lifestyle"].includes(name));
+    button.classList.toggle("active", active);
+  });
+}
+
+function goBack() {
+  const index = screenOrder.indexOf(currentScreen);
+  if (index > 0) {
+    goToScreen(screenOrder[index - 1]);
+  }
+}
 
 function readPayload() {
   const data = new FormData(form);
@@ -85,22 +112,36 @@ function fillForm(payload) {
   }
 }
 
+function renderLoading() {
+  result.innerHTML = `
+    <div class="analysis-panel">
+      <div class="analysis-topbar">
+        <strong>분석 엔진</strong>
+        <span class="live-pill"><i></i> LIVE</span>
+      </div>
+      <div class="analysis-hero">
+        <div class="score-ring" style="--value:45%">
+          <div>AI</div>
+        </div>
+        <h2>분석 중...</h2>
+        <p>검진 수치와 생활패턴을 바탕으로 위험 요인과 오늘의 개선 행동을 계산하고 있습니다.</p>
+      </div>
+    </div>
+  `;
+  goToScreen("result");
+}
+
 function render(data) {
   const primaryRisk = [...data.risks].sort((a, b) => b.probability - a.probability)[0];
-  const completedSteps = [
-    "검진 수치 정규화 완료",
-    "위험 요인 가중치 계산 완료",
-    "퍼스널 개선 플랜 생성 완료",
-  ];
 
   const risks = data.risks
     .map(
       (risk) => `
-        <article class="risk-card analysis-risk-card ${risk.level}">
+        <article class="result-card risk-card ${risk.level}">
           <div class="risk-card-top">
             <div>
-              <strong>${risk.label}</strong>
-              <p class="risk-subtitle">${levelDescriptions[risk.level]}</p>
+              <h3>${risk.label}</h3>
+              <p class="muted">검진 수치와 생활패턴 기반</p>
             </div>
             <span class="risk-level ${risk.level}">${levelLabels[risk.level] || risk.level}</span>
           </div>
@@ -115,161 +156,71 @@ function render(data) {
   const actions = data.plan.today_actions
     .map(
       (action) => `
-        <article class="action">
-          <strong>${action.title}</strong>
+        <article class="action-card">
+          <h3>${action.title}</h3>
           <p>${action.detail}</p>
-          <span class="source-chip">난이도: ${action.difficulty}</span>
+          <p class="muted">난이도: ${action.difficulty}</p>
         </article>
       `,
     )
     .join("");
 
-  const goals = data.plan.weekly_goals.map((goal) => `<li>${goal}</li>`).join("");
+  const goals = data.plan.weekly_goals
+    .map((goal) => `<article class="weekly-card"><p>${goal}</p></article>`)
+    .join("");
 
   result.innerHTML = `
-    <section class="analysis-screen">
+    <div class="analysis-panel">
       <div class="analysis-topbar">
-        <div class="analysis-title">
-          <span class="analysis-symbol">AI</span>
-          <strong>분석 엔진</strong>
-        </div>
-        <span class="live-pill"><i></i> LIVE</span>
+        <strong>분석 엔진</strong>
+        <span class="live-pill"><i></i> 완료</span>
       </div>
+      <div class="analysis-hero">
+        <div class="score-ring" style="--value:${primaryRisk.probability}%">
+          <div>${primaryRisk.probability}</div>
+        </div>
+        <h2>${primaryRisk.label} 가능성이 가장 크게 예측되었습니다.</h2>
+        <p>${primaryRisk.summary} BMI ${data.bmi}와 검진 수치, 생활패턴을 함께 반영했습니다.</p>
+      </div>
+    </div>
 
-      <div class="analysis-hero-result">
-        <div class="analysis-orb-wrap">
-          <span class="pulse-ring ring-a"></span>
-          <span class="pulse-ring ring-b"></span>
-          <div class="analysis-orb" style="--progress:${primaryRisk.probability}%">
-            <div class="analysis-orb-core">
-              <span>${primaryRisk.probability}</span>
-              <small>%</small>
-            </div>
-          </div>
-        </div>
-        <div class="analysis-copy">
-          <span class="source-chip">Step 3 · 결과 산출 완료</span>
-          <h2>${primaryRisk.label} 가능성이 가장 크게 예측되었습니다.</h2>
-          <p>${primaryRisk.summary} BMI ${data.bmi}와 검진 수치, 생활패턴을 함께 반영했습니다.</p>
-        </div>
+    <section class="result-section">
+      <div class="screen-heading">
+        <h2>질환별 위험도</h2>
+        <p>${data.disclaimer}</p>
       </div>
-
-      <div class="analysis-status-grid">
-        ${completedSteps
-          .map(
-            (step) => `
-              <div class="analysis-step done">
-                <span>✓</span>
-                <div>
-                  <strong>${step}</strong>
-                  <p>입력값 기반 분석 파이프라인 통과</p>
-                </div>
-              </div>
-            `,
-          )
-          .join("")}
-      </div>
+      <div class="risk-list">${risks}</div>
     </section>
 
-    <section class="result-card analysis-result-card">
-      <div class="result-card-header">
-        <div>
-          <p class="eyebrow blue">Risk Matrix</p>
-          <h2>질환별 위험도 분석</h2>
-        </div>
-        <span class="source-chip">BMI ${data.bmi}</span>
+    <section class="result-section">
+      <div class="screen-heading">
+        <h2>오늘의 맞춤형 행동 플랜</h2>
+        <p>${data.plan.title}</p>
       </div>
-      <p class="muted">${data.disclaimer}</p>
-      <div class="risk-grid">${risks}</div>
+      <div class="action-list">${actions}</div>
     </section>
-    <section class="result-card analysis-result-card">
-      <div class="result-card-header">
-        <div>
-          <p class="eyebrow blue">Personal Plan</p>
-          <h2>오늘의 작은 개선</h2>
-        </div>
-        <span class="source-chip">${data.plan.today_actions.length}건</span>
+
+    <section class="result-section">
+      <div class="screen-heading">
+        <h2>1주 체크리스트</h2>
+        <p>${data.plan.safety_note}</p>
       </div>
-      <p class="muted">${data.plan.title}</p>
-      <div class="habit-header">
-        <span>오늘 실천</span>
-        <b>무리 없는 행동만 추천</b>
-      </div>
-      <div class="actions">${actions}</div>
-    </section>
-    <section class="result-card analysis-result-card">
-      <div class="result-card-header">
-        <div>
-          <p class="eyebrow blue">Weekly Goal</p>
-          <h2>1주 목표</h2>
-        </div>
-        <span class="source-chip">체크리스트</span>
-      </div>
-      <ol>${goals}</ol>
-      <p class="muted">${data.plan.safety_note}</p>
+      <div class="weekly-list">${goals}</div>
     </section>
   `;
+  goToScreen("result");
 }
 
-function renderAnalysisLoading() {
-  result.innerHTML = `
-    <section class="analysis-screen loading">
-      <div class="analysis-topbar">
-        <div class="analysis-title">
-          <span class="analysis-symbol">AI</span>
-          <strong>분석 엔진</strong>
-        </div>
-        <span class="live-pill"><i></i> LIVE STREAM</span>
-      </div>
+navButtons.forEach((button) => {
+  button.addEventListener("click", () => goToScreen(button.dataset.screenTarget));
+});
 
-      <div class="analysis-loading-center">
-        <div class="analysis-orb-wrap">
-          <span class="pulse-ring ring-a"></span>
-          <span class="pulse-ring ring-b"></span>
-          <div class="analysis-orb loading-orb" style="--progress:45%">
-            <div class="analysis-orb-core">
-              <span class="analysis-symbol big">AI</span>
-            </div>
-          </div>
-        </div>
-        <div class="analysis-copy center">
-          <h2>분석 중...</h2>
-          <p>검진 수치와 생활패턴을 기반으로 위험 요인과 실천 플랜을 계산하고 있습니다.</p>
-        </div>
-      </div>
-
-      <div class="analysis-status-list">
-        <div class="analysis-step done">
-          <span>✓</span>
-          <div>
-            <strong>데이터 수집 완료</strong>
-            <p>검진 수치와 생활패턴 입력값을 확인했습니다.</p>
-          </div>
-        </div>
-        <div class="analysis-step active">
-          <span>↻</span>
-          <div>
-            <strong>위험도 계산 중</strong>
-            <p>공복혈당, 혈압, 지질, BMI, 활동량 요인을 분석합니다.</p>
-          </div>
-        </div>
-        <div class="analysis-step">
-          <span>···</span>
-          <div>
-            <strong>퍼스널 플랜 생성 대기</strong>
-            <p>무리 없는 하루 행동과 1주 목표를 정리합니다.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  `;
-  result.scrollIntoView({ behavior: "smooth", block: "start" });
-}
+backButton.addEventListener("click", goBack);
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   try {
-    renderAnalysisLoading();
+    renderLoading();
     const response = await fetch("/risk/predict", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -277,16 +228,22 @@ form.addEventListener("submit", async (event) => {
     });
     if (!response.ok) throw new Error("입력값을 다시 확인해 주세요.");
     render(await response.json());
-    result.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (error) {
-    result.innerHTML = `<section class="result-card"><h2>입력 확인 필요</h2><p class="muted">${error.message}</p></section>`;
+    result.innerHTML = `
+      <div class="empty-result">
+        <h2>입력 확인 필요</h2>
+        <p>${error.message}</p>
+        <button class="primary wide" type="button" data-screen-target="lifestyle">다시 입력하기</button>
+      </div>
+    `;
+    goToScreen("result");
   }
 });
 
 loadDemo.addEventListener("click", async () => {
   const response = await fetch("/risk/demo");
   fillForm(await response.json());
-  publicSampleStatus.textContent = "데모 입력값을 불러왔습니다.";
+  publicSampleStatus.textContent = "데모 입력값을 불러왔습니다. 하단 입력 탭에서 확인할 수 있습니다.";
 });
 
 loadPublicSample.addEventListener("click", async () => {
@@ -326,3 +283,12 @@ ocrDemo.addEventListener("click", async () => {
     ocrStatus.textContent = error.message;
   }
 });
+
+document.addEventListener("click", (event) => {
+  const dynamicTarget = event.target.closest("[data-screen-target]");
+  if (dynamicTarget) {
+    goToScreen(dynamicTarget.dataset.screenTarget);
+  }
+});
+
+goToScreen("home");
