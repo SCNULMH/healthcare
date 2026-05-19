@@ -9,5 +9,6 @@ data/
 *.log
 .codex/
 디자인 템플릿/
+디자인템플릿/
 *.pdf
 *.hwp

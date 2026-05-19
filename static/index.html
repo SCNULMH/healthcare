@@ -8,10 +8,10 @@
   </head>
   <body>
     <header class="topbar">
-      <div class="brand">
+      <a class="brand" href="#home" aria-label="검진AI 리셋코치 홈">
         <span class="brand-mark">R</span>
         <span>검진AI 리셋코치</span>
-      </div>
+      </a>
       <nav class="topnav" aria-label="주요 화면">
         <a href="#input">입력</a>
         <a href="#result">분석</a>
@@ -19,45 +19,70 @@
       </nav>
     </header>
 
-    <main class="shell">
+    <main id="home" class="shell">
       <section class="hero">
-        <div>
+        <div class="hero-copy">
           <p class="eyebrow">웹앱 제출형 MVP</p>
-          <h1>건강검진 수치로 예측하고, 오늘 바꿀 한 가지를 정합니다.</h1>
-          <p class="lead">건강검진 결과와 생활패턴을 입력하면 성인병 위험을 분석하고, 무리 없는 퍼스널 개선 플랜을 제안합니다.</p>
+          <h1>검진 수치를 읽고, 오늘 실천할 작은 행동으로 바꿉니다.</h1>
+          <p class="lead">
+            건강검진 결과와 생활패턴을 입력하면 고혈압·당뇨·이상지질혈증 위험을 예측하고,
+            무리 없는 퍼스널 개선 플랜을 제안합니다.
+          </p>
           <div class="hero-actions">
             <button id="load-demo" class="primary" type="button">데모 값 불러오기</button>
-            <button id="load-public-sample" class="secondary button-secondary" type="button">공공데이터 샘플 불러오기</button>
-            <a class="secondary" href="#input">직접 입력하기</a>
+            <button id="load-public-sample" class="secondary button-secondary" type="button">공공데이터 샘플</button>
+            <a class="secondary" href="#input">직접 입력</a>
           </div>
           <p id="public-sample-status" class="muted status-line"></p>
         </div>
-        <aside class="hero-card" aria-label="서비스 요약">
-          <span class="hero-chip">예방관리 참고 정보</span>
-          <strong>데이터 기반 위험예측</strong>
-          <p>공복혈당, 혈압, 지질, BMI, 활동량을 함께 보고 작은 습관 개선으로 연결합니다.</p>
-          <div class="score-preview">
-            <span>시연 준비도</span>
-            <b>92/100</b>
+
+        <aside class="phone-preview" aria-label="앱 화면 미리보기">
+          <div class="phone-header">
+            <span>위험도 결과</span>
+            <span class="phone-dot"></span>
+          </div>
+          <div class="phone-body">
+            <div class="mini-profile">
+              <div>
+                <strong>오늘의 건강 리셋</strong>
+                <p>공복혈당과 활동량을 우선 확인하세요.</p>
+              </div>
+              <span class="mini-score">72</span>
+            </div>
+            <div class="mini-risk high">
+              <span>당뇨 위험</span>
+              <b>높음</b>
+            </div>
+            <div class="mini-risk caution">
+              <span>혈압 관리</span>
+              <b>주의</b>
+            </div>
+            <div class="mini-action">
+              <span class="check-icon"></span>
+              <div>
+                <strong>점심 후 단 음료 줄이기</strong>
+                <p>오늘 한 잔만 무가당으로 바꾸기</p>
+              </div>
+            </div>
           </div>
         </aside>
       </section>
 
-      <section class="import-panel" aria-labelledby="import-title">
+      <section class="workflow" aria-labelledby="workflow-title">
         <div class="section-title">
           <span>Step 1</span>
-          <h2 id="import-title">검진 데이터 입력 방식</h2>
+          <h2 id="workflow-title">검진 데이터 입력 방식</h2>
         </div>
-        <div class="import-grid">
-          <article>
-            <span class="icon">01</span>
+        <div class="workflow-grid">
+          <article class="method-card active">
+            <span class="method-number">01</span>
             <strong>직접 입력</strong>
             <p>공모전 MVP 기본 방식입니다. 건강검진 결과지의 주요 수치를 아래 입력폼에 넣습니다.</p>
           </article>
-          <article>
-            <span class="icon">02</span>
-            <strong>OCR 업로드</strong>
-            <p>검진 결과지 PDF/이미지를 업로드하면 OCR 추출 데모로 입력값을 채웁니다.</p>
+          <article class="method-card scan-card">
+            <span class="method-number">02</span>
+            <strong>OCR 업로드 데모</strong>
+            <p>검진 결과지 PDF/이미지를 업로드하면 주요 수치를 추출하는 흐름을 시연합니다.</p>
             <div class="scan-demo" aria-hidden="true">
               <span class="scan-line"></span>
               <span class="scan-box box-a"></span>
@@ -68,18 +93,18 @@
             <button id="ocr-demo" type="button">OCR 데모 흐름 보기</button>
             <p id="ocr-status" class="muted"></p>
           </article>
-          <article>
-            <span class="icon">03</span>
-            <strong>건강 앱 연동</strong>
+          <article class="method-card">
+            <span class="method-number">03</span>
+            <strong>건강 앱 연동 로드맵</strong>
             <p>향후 HealthKit, Health Connect로 걸음수·활동량·수면 데이터를 사용자 동의 기반으로 연동합니다.</p>
           </article>
         </div>
       </section>
 
-      <section class="notice-band">
+      <section class="notice-band" aria-label="서비스 원칙">
         <div>
           <strong>개인정보 보호형 MVP</strong>
-          <p>입력값은 현재 화면과 API 요청에만 사용하며, 서버에 영구 저장하지 않습니다.</p>
+          <p>입력값은 현재 화면과 API 요청에만 사용하며 서버에 영구 저장하지 않습니다.</p>
         </div>
         <div>
           <strong>진단이 아닌 예방관리</strong>
@@ -87,7 +112,7 @@
         </div>
         <div>
           <strong>공공데이터 기반</strong>
-          <p>국민건강보험공단 건강검진정보 학습 구조와 기준값 기반 위험 엔진으로 시연합니다.</p>
+          <p>국민건강보험공단 건강검진정보 샘플 연동과 기준값 기반 위험 엔진으로 시연합니다.</p>
         </div>
       </section>
 
@@ -98,7 +123,10 @@
         </div>
 
         <section class="panel compact">
-          <h3>기본 정보</h3>
+          <div class="panel-heading">
+            <span class="panel-icon">A</span>
+            <h3>기본 정보</h3>
+          </div>
           <div class="fields">
             <label>나이 <input name="age" type="number" value="43" /></label>
             <label>성별
@@ -114,7 +142,10 @@
         </section>
 
         <section class="panel">
-          <h3>검진 수치</h3>
+          <div class="panel-heading">
+            <span class="panel-icon blue">B</span>
+            <h3>검진 수치</h3>
+          </div>
           <div class="fields">
             <label>수축기혈압 <input name="systolic_bp" type="number" value="132" /></label>
             <label>이완기혈압 <input name="diastolic_bp" type="number" value="86" /></label>
@@ -127,7 +158,10 @@
         </section>
 
         <section class="panel full">
-          <h3>생활패턴</h3>
+          <div class="panel-heading">
+            <span class="panel-icon green">C</span>
+            <h3>생활패턴</h3>
+          </div>
           <div class="fields lifestyle-fields">
             <label>아침식사
               <select name="breakfast">

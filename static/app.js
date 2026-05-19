@@ -36,6 +36,12 @@ const lifestyleFields = [
   "can_prepare_meals",
 ];
 
+const levelLabels = {
+  high: "높음",
+  caution: "주의",
+  normal: "안정",
+};
+
 function readPayload() {
   const data = new FormData(form);
   const health = {};
@@ -60,6 +66,7 @@ function readPayload() {
 
 function fillForm(payload) {
   for (const values of Object.values(payload)) {
+    if (!values || typeof values !== "object") continue;
     for (const [key, value] of Object.entries(values)) {
       const input = form.elements[key];
       if (!input) continue;
@@ -76,10 +83,16 @@ function render(data) {
   const risks = data.risks
     .map(
       (risk) => `
-        <article class="risk-card">
-          <strong>${risk.label}</strong>
+        <article class="risk-card ${risk.level}">
+          <div class="risk-card-top">
+            <div>
+              <strong>${risk.label}</strong>
+              <p class="risk-subtitle">검진 수치와 생활패턴 기반</p>
+            </div>
+            <span class="risk-level ${risk.level}">${levelLabels[risk.level] || risk.level}</span>
+          </div>
           <div class="meter" style="--value:${risk.probability}%"><span></span></div>
-          <p>${risk.probability}% · ${risk.summary}</p>
+          <p class="risk-score">${risk.probability}% · ${risk.summary}</p>
           <p class="muted">${risk.reasons.join("<br />")}</p>
         </article>
       `,
@@ -92,7 +105,7 @@ function render(data) {
         <article class="action">
           <strong>${action.title}</strong>
           <p>${action.detail}</p>
-          <span class="muted">난이도: ${action.difficulty}</span>
+          <span class="source-chip">난이도: ${action.difficulty}</span>
         </article>
       `,
     )
@@ -102,22 +115,40 @@ function render(data) {
 
   result.innerHTML = `
     <section class="result-card">
-      <h2>위험예측 결과</h2>
-      <p class="muted">BMI ${data.bmi} · ${data.disclaimer}</p>
+      <div class="result-card-header">
+        <div>
+          <p class="eyebrow">Step 3</p>
+          <h2>위험예측 결과</h2>
+        </div>
+        <span class="source-chip">BMI ${data.bmi}</span>
+      </div>
+      <p class="muted">${data.disclaimer}</p>
       <div class="risk-grid">${risks}</div>
     </section>
     <section class="result-card">
-      <h2>오늘의 작은 개선</h2>
+      <div class="result-card-header">
+        <div>
+          <p class="eyebrow">Today</p>
+          <h2>오늘의 작은 개선</h2>
+        </div>
+        <span class="source-chip">${data.plan.today_actions.length}건</span>
+      </div>
       <p class="muted">${data.plan.title}</p>
       <div class="habit-header">
         <span>오늘 실천</span>
-        <b>${data.plan.today_actions.length}건</b>
+        <b>무리 없는 행동만 추천</b>
       </div>
       <div class="actions">${actions}</div>
     </section>
     <section class="result-card">
-      <h2>1주 목표</h2>
-      <ul>${goals}</ul>
+      <div class="result-card-header">
+        <div>
+          <p class="eyebrow">Week</p>
+          <h2>1주 목표</h2>
+        </div>
+        <span class="source-chip">체크리스트</span>
+      </div>
+      <ol>${goals}</ol>
       <p class="muted">${data.plan.safety_note}</p>
     </section>
   `;
@@ -133,6 +164,7 @@ form.addEventListener("submit", async (event) => {
     });
     if (!response.ok) throw new Error("입력값을 다시 확인해 주세요.");
     render(await response.json());
+    result.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (error) {
     result.innerHTML = `<section class="result-card"><h2>입력 확인 필요</h2><p class="muted">${error.message}</p></section>`;
   }
