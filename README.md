@@ -13,6 +13,12 @@
 - 건강 앱 자동 연동은 앱스토어/플레이스토어 승인과 네이티브 권한이 필요하므로 향후 로드맵으로 둡니다.
 - 다음 단계 기능으로 건강검진 결과지 이미지/PDF OCR 업로드를 구현할 수 있게 API 확장 지점을 마련했습니다.
 
+## 제출용 문서
+
+- [서비스 요약](docs/submission_overview.md)
+- [AI·모델 활용 설명](docs/ai_model_strategy.md)
+- [OCR 기능 구현 방침](docs/ocr_strategy.md)
+
 ## API 키 준비
 
 공공데이터포털 API 키를 발급받으면 `.env.example`을 복사해 `.env`를 만들고 키를 넣습니다.
