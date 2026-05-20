@@ -11,6 +11,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
@@ -69,17 +70,25 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 def add_labels(df: pd.DataFrame) -> pd.DataFrame:
     result = df.copy()
+    for column in FEATURES:
+        if column == "bmi":
+            continue
+        if column not in {"sex", "age_group", "sido", "smoking", "drinking"}:
+            result[column] = pd.to_numeric(result[column], errors="coerce")
     result["bmi"] = result["weight_kg"] / ((result["height_cm"] / 100) ** 2)
     result["diabetes_risk"] = (result["fasting_glucose"] >= 126).astype(int)
     result["hypertension_risk"] = (
         (result["systolic_bp"] >= 140) | (result["diastolic_bp"] >= 90)
     ).astype(int)
-    result["dyslipidemia_risk"] = (
+    lipid_columns = ["total_cholesterol", "ldl", "triglyceride", "hdl"]
+    lipid_available = result[lipid_columns].notna().any(axis=1)
+    lipid_risk = (
         (result["total_cholesterol"] >= 240)
         | (result["ldl"] >= 160)
         | (result["triglyceride"] >= 200)
         | (result["hdl"] < 40)
-    ).astype(int)
+    )
+    result["dyslipidemia_risk"] = lipid_risk.where(lipid_available, pd.NA)
     return result
 
 
@@ -100,8 +109,26 @@ def build_pipeline(model_name: str) -> Pipeline:
     categorical = ["sex", "age_group", "sido", "smoking", "drinking"]
     preprocessor = ColumnTransformer(
         [
-            ("num", StandardScaler(), numeric),
-            ("cat", OneHotEncoder(handle_unknown="ignore"), categorical),
+            (
+                "num",
+                Pipeline(
+                    [
+                        ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
+                        ("scaler", StandardScaler()),
+                    ]
+                ),
+                numeric,
+            ),
+            (
+                "cat",
+                Pipeline(
+                    [
+                        ("imputer", SimpleImputer(strategy="most_frequent")),
+                        ("encoder", OneHotEncoder(handle_unknown="ignore")),
+                    ]
+                ),
+                categorical,
+            ),
         ]
     )
     if model_name == "logistic":
@@ -117,8 +144,30 @@ def build_pipeline(model_name: str) -> Pipeline:
     return Pipeline([("preprocess", preprocessor), ("model", model)])
 
 
-def train_target(df: pd.DataFrame, target: str, model_name: str) -> tuple[Pipeline, dict]:
-    dataset = df[FEATURES + [target]].dropna()
+def train_target(df: pd.DataFrame, target: str, model_name: str) -> tuple[Pipeline | None, dict]:
+    dataset = df[FEATURES + [target]].dropna(subset=[target])
+    class_counts = dataset[target].value_counts().to_dict()
+    if len(dataset) < 20:
+        return None, {
+            "status": "skipped",
+            "reason": "학습 표본이 20건 미만입니다.",
+            "rows": int(len(dataset)),
+            "class_counts": {str(key): int(value) for key, value in class_counts.items()},
+        }
+    if len(class_counts) < 2:
+        return None, {
+            "status": "skipped",
+            "reason": "라벨이 단일 클래스라 분류 모델을 학습할 수 없습니다.",
+            "rows": int(len(dataset)),
+            "class_counts": {str(key): int(value) for key, value in class_counts.items()},
+        }
+    if min(class_counts.values()) < 2:
+        return None, {
+            "status": "skipped",
+            "reason": "소수 클래스 표본이 2건 미만이라 stratified split을 수행할 수 없습니다.",
+            "rows": int(len(dataset)),
+            "class_counts": {str(key): int(value) for key, value in class_counts.items()},
+        }
     x_train, x_test, y_train, y_test = train_test_split(
         dataset[FEATURES],
         dataset[target],
@@ -132,6 +181,9 @@ def train_target(df: pd.DataFrame, target: str, model_name: str) -> tuple[Pipeli
     predictions = pipeline.predict(x_test)
     report = classification_report(y_test, predictions, output_dict=True)
     report["roc_auc"] = roc_auc_score(y_test, probabilities)
+    report["status"] = "trained"
+    report["rows"] = int(len(dataset))
+    report["class_counts"] = {str(key): int(value) for key, value in class_counts.items()}
     return pipeline, report
 
 
@@ -149,14 +201,18 @@ def main() -> None:
     reports = {}
     for target in targets:
         model, report = train_target(df, target, args.model)
-        models[target] = model
+        if model is not None:
+            models[target] = model
         reports[target] = report
 
     output = Path(args.out)
     output.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump({"features": FEATURES, "models": models, "reports": reports}, output)
     for target, report in reports.items():
-        print(target, "roc_auc=", round(report["roc_auc"], 4), "recall=", report["1"]["recall"])
+        if report.get("status") == "trained":
+            print(target, "roc_auc=", round(report["roc_auc"], 4), "recall=", report["1"]["recall"])
+        else:
+            print(target, "skipped:", report["reason"], "rows=", report["rows"])
 
 
 if __name__ == "__main__":
