@@ -545,6 +545,28 @@ select:focus {
   margin: 14px 0 10px;
 }
 
+.privacy-note {
+  margin-top: 12px;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  background: #eff6ff;
+  padding: 14px;
+}
+
+.privacy-note strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #1d4ed8;
+  font-size: 13px;
+}
+
+.privacy-note p {
+  margin: 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .bottom-nav {
   position: absolute;
   left: 16px;

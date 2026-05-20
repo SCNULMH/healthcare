@@ -18,6 +18,8 @@
 - [서비스 요약](docs/submission_overview.md)
 - [AI·모델 활용 설명](docs/ai_model_strategy.md)
 - [OCR 기능 구현 방침](docs/ocr_strategy.md)
+- [제출서류 작성 초안](docs/submission_form_draft.md)
+- [최종 QA 체크리스트](docs/final_qa_checklist.md)
 
 ## API 키 준비
 
