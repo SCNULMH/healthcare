@@ -712,10 +712,53 @@ select:focus {
 
 .risk-list,
 .action-list,
-.weekly-list {
+.weekly-list,
+.ai-step-list {
   display: grid;
   gap: 12px;
   margin-top: 16px;
+}
+
+.ai-explain-section {
+  border: 1px solid #bfdbfe;
+  border-radius: 24px;
+  background: #eff6ff;
+  padding: 16px;
+}
+
+.ai-step-card {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 12px;
+  align-items: start;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  background: white;
+  padding: 14px;
+}
+
+.ai-step-card span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1d4ed8;
+  color: white;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.ai-step-card h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.ai-step-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
 }
 
 .result-card h3 {

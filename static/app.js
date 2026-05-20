@@ -130,6 +130,7 @@ function renderLoading() {
 
 function render(data) {
   const primaryRisk = [...data.risks].sort((a, b) => b.probability - a.probability)[0];
+  const aiSteps = data.ai_explanation?.steps || [];
 
   const risks = data.risks
     .map(
@@ -138,7 +139,7 @@ function render(data) {
           <div class="risk-card-top">
             <div>
               <h3>${risk.label}</h3>
-              <p class="muted">검진 수치와 생활패턴 기반</p>
+              <p class="muted">AI 판단 근거 · 검진 수치와 생활패턴 기반</p>
             </div>
             <span class="risk-level ${risk.level}">${levelLabels[risk.level] || risk.level}</span>
           </div>
@@ -166,6 +167,20 @@ function render(data) {
     .map((goal) => `<article class="weekly-card"><p>${goal}</p></article>`)
     .join("");
 
+  const aiExplanation = aiSteps
+    .map(
+      (step, index) => `
+        <article class="ai-step-card">
+          <span>${index + 1}</span>
+          <div>
+            <h3>${step.title}</h3>
+            <p>${step.description}</p>
+          </div>
+        </article>
+      `,
+    )
+    .join("");
+
   result.innerHTML = `
     <div class="analysis-panel">
       <div class="analysis-topbar">
@@ -181,9 +196,17 @@ function render(data) {
       </div>
     </div>
 
+    <section class="result-section ai-explain-section">
+      <div class="screen-heading">
+        <h2>${data.ai_explanation?.title || "AI가 이렇게 판단했어요"}</h2>
+        <p>${data.ai_explanation?.model_note || ""}</p>
+      </div>
+      <div class="ai-step-list">${aiExplanation}</div>
+    </section>
+
     <section class="result-section">
       <div class="screen-heading">
-        <h2>질환별 위험도</h2>
+        <h2>AI 질환별 위험도</h2>
         <p>${data.disclaimer}</p>
       </div>
       <div class="risk-list">${risks}</div>
@@ -191,7 +214,7 @@ function render(data) {
 
     <section class="result-section">
       <div class="screen-heading">
-        <h2>오늘의 맞춤형 행동 플랜</h2>
+        <h2>AI 개인화 추천</h2>
         <p>${data.plan.title}</p>
       </div>
       <div class="action-list">${actions}</div>

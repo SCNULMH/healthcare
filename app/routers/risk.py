@@ -74,6 +74,30 @@ async def get_metadata() -> dict:
     }
 
 
+def _ai_explanation() -> dict:
+    return {
+        "title": "AI가 이렇게 판단했어요",
+        "steps": [
+            {
+                "title": "위험도 예측",
+                "description": "건강검진 수치와 생활패턴을 함께 분석해 고혈압·당뇨·이상지질혈증 위험도를 계산합니다.",
+            },
+            {
+                "title": "위험 요인 설명",
+                "description": "공복혈당, 혈압, BMI, 걸음수처럼 위험도를 높인 요인을 쉬운 말로 풀어줍니다.",
+            },
+            {
+                "title": "개인 맞춤 개선 플랜",
+                "description": "사용자의 생활패턴과 실천 제약을 반영해 하루 1~2개의 작은 행동으로 바꿉니다.",
+            },
+        ],
+        "model_note": (
+            "현재 MVP는 설명 가능한 규칙 기반 AI 엔진으로 동작하며, "
+            "공공데이터 기반 RandomForest/LogisticRegression 학습 파이프라인으로 확장할 수 있습니다."
+        ),
+    }
+
+
 @router.post("/predict")
 async def predict_risk(payload: RiskRequest) -> dict:
     health = HealthProfile(**payload.health.model_dump())
@@ -85,6 +109,7 @@ async def predict_risk(payload: RiskRequest) -> dict:
         "bmi": round(health.bmi, 1),
         "risks": [risk.to_dict() for risk in risks],
         "plan": plan,
+        "ai_explanation": _ai_explanation(),
     }
 
 

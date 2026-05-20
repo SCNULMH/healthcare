@@ -69,6 +69,9 @@ class RiskApiTests(unittest.TestCase):
         payload = response.json()
         self.assertIn("risks", payload)
         self.assertIn("plan", payload)
+        self.assertIn("ai_explanation", payload)
+        self.assertEqual(payload["ai_explanation"]["title"], "AI가 이렇게 판단했어요")
+        self.assertEqual(len(payload["ai_explanation"]["steps"]), 3)
         self.assertLessEqual(len(payload["plan"]["today_actions"]), 2)
 
     def test_ocr_extract_accepts_file_upload(self):
