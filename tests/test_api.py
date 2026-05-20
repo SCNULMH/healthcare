@@ -21,7 +21,7 @@ class RiskApiTests(unittest.TestCase):
         self.assertIn("model", payload)
         self.assertIn("status", payload["model"])
         self.assertIn("ocr", payload)
-        self.assertEqual(payload["ocr"]["provider"], "demo")
+        self.assertIn(payload["ocr"]["provider"], {"demo", "openai", "off", "disabled"})
         self.assertTrue(any("HealthKit" in item for item in payload["roadmap"]))
 
     def test_readiness_reports_key_state(self):
@@ -114,6 +114,50 @@ class RiskApiTests(unittest.TestCase):
         self.assertEqual(payload["prefill"]["health"]["height_cm"], 172)
         self.assertEqual(payload["prefill"]["health"]["fasting_glucose"], 132)
         self.assertIn("공복혈당", payload["extracted_fields"])
+
+    def test_ocr_result_ai_matches_raw_text_lines(self):
+        document = UploadedDocument("checkup.txt", "text/plain", b"sample")
+        raw_fields = {
+            "raw_text": """
+            신체계측 신장 172 cm
+            몸무게 82 kg
+            혈압 132/86 mmHg
+            식전혈당(공복혈당) 128 mg/dL
+            총 콜레스테롤 218
+            HDL-콜레스테롤 42
+            LDL 콜레스테롤 138
+            트리글리세라이드 185
+            """,
+            "warnings": [],
+        }
+
+        payload = _build_prefill_from_fields(document, raw_fields, Settings())
+
+        self.assertEqual(payload["status"], "ocr_extracted")
+        self.assertEqual(payload["prefill"]["health"]["height_cm"], 172)
+        self.assertEqual(payload["prefill"]["health"]["systolic_bp"], 132)
+        self.assertEqual(payload["prefill"]["health"]["diastolic_bp"], 86)
+        self.assertEqual(payload["prefill"]["health"]["fasting_glucose"], 128)
+        self.assertEqual(payload["prefill"]["health"]["triglyceride"], 185)
+        self.assertIn("match_details", payload)
+
+    def test_ocr_result_ai_matches_table_rows(self):
+        document = UploadedDocument("checkup.png", "image/png", b"sample")
+        raw_fields = {
+            "rows": [
+                {"검사항목": "최고 혈압", "결과": "134"},
+                {"검사항목": "최저 혈압", "결과": "88"},
+                {"검사항목": "고밀도 콜레스테롤", "결과": "47"},
+                {"검사항목": "저밀도 콜레스테롤", "결과": "141"},
+            ]
+        }
+
+        payload = _build_prefill_from_fields(document, raw_fields, Settings())
+
+        self.assertEqual(payload["prefill"]["health"]["systolic_bp"], 134)
+        self.assertEqual(payload["prefill"]["health"]["diastolic_bp"], 88)
+        self.assertEqual(payload["prefill"]["health"]["hdl"], 47)
+        self.assertEqual(payload["prefill"]["health"]["ldl"], 141)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import base64
+from difflib import SequenceMatcher
 import json
 import re
 from dataclasses import dataclass
@@ -43,19 +44,33 @@ NUMERIC_RANGES = {
 }
 
 FIELD_ALIASES = {
-    "age": ["age", "나이", "연령", "연령대"],
+    "age": ["age", "나이", "연령", "연령대", "만나이"],
     "sex": ["sex", "성별", "gender"],
-    "height_cm": ["height_cm", "height", "신장", "키"],
-    "weight_kg": ["weight_kg", "weight", "체중"],
-    "waist_cm": ["waist_cm", "waist", "허리둘레"],
-    "systolic_bp": ["systolic_bp", "systolic", "수축기혈압", "최고혈압"],
-    "diastolic_bp": ["diastolic_bp", "diastolic", "이완기혈압", "최저혈압"],
-    "fasting_glucose": ["fasting_glucose", "glucose", "공복혈당", "식전혈당"],
-    "total_cholesterol": ["total_cholesterol", "total_chol", "총콜레스테롤"],
-    "hdl": ["hdl", "HDL", "HDL콜레스테롤"],
-    "ldl": ["ldl", "LDL", "LDL콜레스테롤"],
-    "triglyceride": ["triglyceride", "triglycerides", "tg", "중성지방", "트리글리세라이드"],
+    "height_cm": ["height_cm", "height", "신장", "키", "신장cm"],
+    "weight_kg": ["weight_kg", "weight", "체중", "몸무게", "체중kg"],
+    "waist_cm": ["waist_cm", "waist", "허리둘레", "복부둘레", "waistcircumference"],
+    "systolic_bp": ["systolic_bp", "systolic", "수축기혈압", "최고혈압", "혈압최고", "혈압", "bp", "sbp"],
+    "diastolic_bp": ["diastolic_bp", "diastolic", "이완기혈압", "최저혈압", "혈압최저", "혈압", "bp", "dbp"],
+    "fasting_glucose": ["fasting_glucose", "glucose", "공복혈당", "식전혈당", "혈당", "fbs"],
+    "total_cholesterol": ["total_cholesterol", "total_chol", "총콜레스테롤", "총콜레스테롤검사", "콜레스테롤", "tchol", "tc"],
+    "hdl": ["hdl", "HDL", "HDL콜레스테롤", "고밀도콜레스테롤", "고밀도지단백"],
+    "ldl": ["ldl", "LDL", "LDL콜레스테롤", "저밀도콜레스테롤", "저밀도지단백"],
+    "triglyceride": ["triglyceride", "triglycerides", "tg", "중성지방", "트리글리세라이드", "trig"],
 }
+
+STRUCTURED_LABEL_KEYS = {
+    "label",
+    "name",
+    "item",
+    "field",
+    "test",
+    "test_name",
+    "검사항목",
+    "항목",
+    "항목명",
+    "검사명",
+}
+STRUCTURED_VALUE_KEYS = {"value", "result", "measurement", "수치", "결과", "검사결과", "측정값"}
 
 
 class OcrRuntimeError(RuntimeError):
@@ -224,7 +239,13 @@ async def _extract_with_openai(document: UploadedDocument, settings: Settings) -
     if not text:
         raise OcrRuntimeError("OpenAI OCR 응답에서 텍스트 결과를 찾지 못했습니다.")
 
-    return _parse_json_object(text)
+    try:
+        return _parse_json_object(text)
+    except OcrRuntimeError:
+        return {
+            "raw_text": text,
+            "warnings": ["OpenAI 응답이 JSON 형식이 아니어서 텍스트 기반 AI 매칭 파서를 적용했습니다."],
+        }
 
 
 def _ocr_prompt() -> str:
@@ -256,6 +277,7 @@ Rules:
 - Extract only values visible in the document.
 - Use null when a value is missing or uncertain.
 - Convert Korean labels such as 수축기혈압, 이완기혈압, 식전혈당(공복혈당), HDL콜레스테롤, LDL콜레스테롤, 트리글리세라이드.
+- If the table is hard to structure, include the visible OCR text in "raw_text".
 - Do not diagnose disease and do not recommend medication.
 """.strip()
 
@@ -269,9 +291,10 @@ def _build_prefill_from_fields(
     health_fields = raw_fields.get("health") if isinstance(raw_fields.get("health"), dict) else raw_fields
     extracted: list[str] = []
     warnings = list(raw_fields.get("warnings") or []) if isinstance(raw_fields.get("warnings"), list) else []
+    match_details: dict[str, dict[str, Any]] = {}
 
     for field in FIELD_LABELS:
-        value = _find_field_value(health_fields, field)
+        value, match = _find_field_value(health_fields, field, raw_fields)
         if value is None:
             continue
 
@@ -280,6 +303,7 @@ def _build_prefill_from_fields(
             if sex:
                 profile["health"]["sex"] = sex
                 extracted.append(FIELD_LABELS[field])
+                match_details[field] = match
             else:
                 warnings.append(f"{FIELD_LABELS[field]} 값이 남성/여성으로 해석되지 않아 반영하지 않았습니다.")
             continue
@@ -291,6 +315,7 @@ def _build_prefill_from_fields(
 
         profile["health"][field] = converted
         extracted.append(FIELD_LABELS[field])
+        match_details[field] = match
 
     extracted_from_model = raw_fields.get("extracted_fields")
     if isinstance(extracted_from_model, list):
@@ -315,6 +340,7 @@ def _build_prefill_from_fields(
         "prefill": profile,
         "extracted_fields": extracted,
         "raw_fields": raw_fields,
+        "match_details": match_details,
         "warnings": warnings,
         "model": settings.openai_ocr_model,
     }
@@ -381,20 +407,166 @@ def _parse_json_object(text: str) -> dict[str, Any]:
     return parsed
 
 
-def _find_field_value(data: Any, field: str) -> Any:
-    if not isinstance(data, dict):
-        return None
-    aliases = FIELD_ALIASES[field]
-    normalized = {_normalize_key(str(key)): value for key, value in data.items()}
-    for alias in aliases:
-        alias_key = _normalize_key(alias)
-        value = normalized.get(alias_key)
-        if value is not None:
+def _find_field_value(data: Any, field: str, raw_fields: dict[str, Any]) -> tuple[Any, dict[str, Any]]:
+    candidates = _collect_candidate_pairs(data)
+    raw_text = _raw_text_from_fields(raw_fields)
+    if raw_text:
+        candidates.extend(_line_candidates(raw_text))
+
+    best: tuple[float, Any, str] | None = None
+    for label, value in candidates:
+        score = _label_match_score(field, label)
+        if score <= 0:
+            continue
+
+        candidate_value = _extract_value_from_candidate(field, value, label)
+        if candidate_value is None:
+            continue
+        if best is None or score > best[0]:
+            best = (score, candidate_value, label)
+
+    if best is None and raw_text:
+        text_value, label = _find_text_value_by_context(field, raw_text)
+        if text_value is not None:
+            best = (0.6, text_value, label)
+
+    if best is None:
+        return None, {}
+
+    score, value, label = best
+    return value, {"matched_label": label, "confidence": round(min(score, 1.0), 2)}
+
+
+def _collect_candidate_pairs(data: Any, prefix: str = "") -> list[tuple[str, Any]]:
+    pairs: list[tuple[str, Any]] = []
+    if isinstance(data, dict):
+        structured_label = _first_key_value(data, STRUCTURED_LABEL_KEYS)
+        structured_value = _first_key_value(data, STRUCTURED_VALUE_KEYS)
+        if structured_label is not None and structured_value is not None:
+            pairs.append((str(structured_label), structured_value))
+
+        for key, value in data.items():
+            key_text = str(key)
+            label = f"{prefix} {key_text}".strip()
+            if isinstance(value, (dict, list)):
+                pairs.extend(_collect_candidate_pairs(value, label))
+            else:
+                pairs.append((label, value))
+    elif isinstance(data, list):
+        for index, item in enumerate(data):
+            pairs.extend(_collect_candidate_pairs(item, f"{prefix} {index}".strip()))
+    elif isinstance(data, str):
+        pairs.extend(_line_candidates(data))
+    return pairs
+
+
+def _first_key_value(data: dict[str, Any], key_set: set[str]) -> Any:
+    normalized = {_normalize_key(key): value for key, value in data.items()}
+    for key in key_set:
+        value = normalized.get(_normalize_key(key))
+        if value not in (None, ""):
             return value
-        for key, candidate in normalized.items():
-            if alias_key in key or key in alias_key:
-                return candidate
     return None
+
+
+def _line_candidates(text: str) -> list[tuple[str, str]]:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    candidates: list[tuple[str, str]] = []
+    for line in lines:
+        candidates.append((line, line))
+        parts = re.split(r"[:：|]\s*|\s{2,}", line, maxsplit=1)
+        if len(parts) == 2:
+            candidates.append((parts[0], parts[1]))
+    return candidates
+
+
+def _raw_text_from_fields(raw_fields: dict[str, Any]) -> str:
+    raw_values: list[str] = []
+    for key in ("raw_text", "ocr_text", "text", "full_text", "recognized_text"):
+        value = raw_fields.get(key)
+        if isinstance(value, str):
+            raw_values.append(value)
+    if isinstance(raw_fields.get("pages"), list):
+        for page in raw_fields["pages"]:
+            if isinstance(page, dict):
+                raw_values.append(_raw_text_from_fields(page))
+            elif isinstance(page, str):
+                raw_values.append(page)
+    return "\n".join(value for value in raw_values if value).strip()
+
+
+def _label_match_score(field: str, label: str) -> float:
+    normalized_label = _normalize_key(label)
+    if not normalized_label:
+        return 0
+
+    best = 0.0
+    for alias in FIELD_ALIASES[field]:
+        normalized_alias = _normalize_key(alias)
+        if not normalized_alias:
+            continue
+        if normalized_alias == normalized_label:
+            best = max(best, 1.0)
+        elif normalized_alias in normalized_label:
+            best = max(best, 0.92)
+        elif normalized_label in normalized_alias:
+            best = max(best, 0.85)
+        else:
+            best = max(best, SequenceMatcher(None, normalized_alias, normalized_label).ratio() * 0.72)
+
+    if field in {"hdl", "ldl"} and _normalize_key(field) not in normalized_label:
+        if "콜레스테롤" in label and field == "hdl" and "고밀도" not in label:
+            best = min(best, 0.35)
+        if "콜레스테롤" in label and field == "ldl" and "저밀도" not in label:
+            best = min(best, 0.35)
+    if field == "total_cholesterol" and any(token in normalized_label for token in ("hdl", "ldl", "고밀도", "저밀도")):
+        return 0
+    if field == "fasting_glucose" and ("혈색소" in label or "당화" in label or "hba1c" in normalized_label):
+        return 0
+    return best if best >= 0.52 else 0
+
+
+def _extract_value_from_candidate(field: str, value: Any, label: str) -> Any:
+    if field in {"systolic_bp", "diastolic_bp"}:
+        pair = _extract_bp_pair(str(value))
+        if pair:
+            return pair[0] if field == "systolic_bp" else pair[1]
+        pair = _extract_bp_pair(label)
+        if pair:
+            return pair[0] if field == "systolic_bp" else pair[1]
+    return value
+
+
+def _find_text_value_by_context(field: str, text: str) -> tuple[Any, str]:
+    for line in text.splitlines():
+        if _label_match_score(field, line) <= 0:
+            continue
+        if field in {"systolic_bp", "diastolic_bp"}:
+            pair = _extract_bp_pair(line)
+            if pair:
+                return (pair[0] if field == "systolic_bp" else pair[1]), line
+        for number in _numbers_from_text(line):
+            if _coerce_numeric(field, number) is not None:
+                return number, line
+    return None, ""
+
+
+def _extract_bp_pair(text: str) -> tuple[int, int] | None:
+    match = re.search(r"(\d{2,3})\s*/\s*(\d{2,3})", text)
+    if match:
+        return int(match.group(1)), int(match.group(2))
+    if not any(keyword in text for keyword in ("혈압", "bp", "BP", "수축", "이완", "최고", "최저")):
+        return None
+    numbers = [int(round(float(number))) for number in _numbers_from_text(text)]
+    numbers = [number for number in numbers if 40 <= number <= 240]
+    if len(numbers) >= 2:
+        high, low = numbers[0], numbers[1]
+        return (max(high, low), min(high, low))
+    return None
+
+
+def _numbers_from_text(text: str) -> list[float]:
+    return [float(match) for match in re.findall(r"-?\d+(?:\.\d+)?", text.replace(",", ""))]
 
 
 def _normalize_key(value: str) -> str:
