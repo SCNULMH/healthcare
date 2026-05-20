@@ -51,11 +51,14 @@ class PublicDataClient:
         self.settings = settings
 
     async def fetch_json(self, path: str, page: int = 1, per_page: int = 10) -> dict:
+        if self.settings.use_demo_data:
+            return _demo_public_data_response()
+
         if not self.settings.has_public_data_key:
             return {
                 "status": "missing_key",
                 "message": "PUBLIC_DATA_SERVICE_KEY 환경변수가 설정되어야 합니다.",
-                "data": [],
+                "data": [_demo_public_data_row()],
             }
 
         url = f"{self.settings.public_data_base_url.rstrip('/')}{path}"
@@ -65,10 +68,17 @@ class PublicDataClient:
             "returnType": "JSON",
             "serviceKey": self.settings.public_data_service_key,
         }
-        async with httpx.AsyncClient(timeout=self.settings.request_timeout_seconds) as client:
-            response = await client.get(url, params=params)
-            response.raise_for_status()
-            return response.json()
+        try:
+            async with httpx.AsyncClient(timeout=self.settings.request_timeout_seconds) as client:
+                response = await client.get(url, params=params)
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPError as exc:
+            return {
+                "status": "fallback_demo",
+                "message": f"공공데이터 API 호출 실패로 데모 샘플을 사용합니다: {exc}",
+                "data": [_demo_public_data_row()],
+            }
 
     async def fetch_checkup_sample(self, per_page: int = 3) -> dict:
         return await self.fetch_json(self.settings.checkup_dataset_path, page=1, per_page=per_page)
@@ -96,6 +106,12 @@ class PublicDataClient:
         }
 
     async def check_status(self) -> dict:
+        if self.settings.use_demo_data:
+            return {
+                "status": "demo",
+                "message": "USE_DEMO_DATA=true 상태라 공공데이터 API 대신 데모 데이터를 사용합니다.",
+            }
+
         if not self.settings.has_public_data_key:
             return {
                 "status": "missing_key",
@@ -104,6 +120,13 @@ class PublicDataClient:
 
         try:
             sample = await self.fetch_checkup_sample(per_page=1)
+            if sample.get("status") == "fallback_demo":
+                return {
+                    "status": "fallback_demo",
+                    "base_url": self.settings.public_data_base_url,
+                    "sample_count": len(sample.get("data", [])),
+                    "message": sample.get("message", "공공데이터 API 호출 실패로 데모 데이터를 사용합니다."),
+                }
             return {
                 "status": "reachable",
                 "base_url": self.settings.public_data_base_url,
@@ -125,6 +148,35 @@ class PublicDataClient:
                 "base_url": self.settings.public_data_base_url,
                 "message": str(exc),
             }
+
+
+def _demo_public_data_response() -> dict:
+    return {
+        "status": "demo",
+        "currentCount": 1,
+        "totalCount": 1,
+        "data": [_demo_public_data_row()],
+    }
+
+
+def _demo_public_data_row() -> dict:
+    return {
+        "기준년도": "2022",
+        "연령대코드(5세단위)": "9",
+        "성별": "1",
+        "신장(5cm단위)": "170",
+        "체중(5kg단위)": "80",
+        "허리둘레": "92",
+        "수축기혈압": "132",
+        "이완기혈압": "86",
+        "식전혈당(공복혈당)": "132",
+        "총콜레스테롤": "218",
+        "HDL콜레스테롤": "42",
+        "LDL콜레스테롤": "138",
+        "트리글리세라이드": "185",
+        "흡연상태": "2",
+        "음주여부": "1",
+    }
 
 
 def _to_float(value: Any, default: float) -> float:

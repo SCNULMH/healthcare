@@ -180,3 +180,13 @@ python scripts/train_risk_models.py --csv .\data\health_checkup.csv --out .\mode
 - ROC-AUC, recall, precision 등 지표 산출
 - 변수 중요도 또는 계수 기반 설명 자료 작성
 - 학습된 모델을 `/risk/predict` 내부 엔진으로 선택 적용
+
+## 9. 런타임 모델 분기
+
+앱은 `RISK_MODEL_MODE` 환경변수로 예측 엔진을 선택합니다.
+
+- `auto`: 학습 모델 파일이 있으면 사용하고, 없으면 규칙 기반 엔진으로 자동 전환
+- `rule`: 항상 규칙 기반 엔진 사용
+- `model`: 학습 모델 파일 로드 실패 시 503 오류 반환
+
+기본 배포는 `auto`가 안전합니다. Render 무료 환경처럼 모델 파일을 배포 파일시스템에 올리기 어려운 경우에는 자동으로 규칙 기반 엔진을 사용합니다. Colab 등 외부 환경에서 생성한 `risk_models.joblib`를 서버에 배치하고 `RISK_MODEL_PATH`를 맞추면 학습 모델을 우선 적용할 수 있습니다.

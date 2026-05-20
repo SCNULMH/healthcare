@@ -17,6 +17,7 @@
 
 - [서비스 요약](docs/submission_overview.md)
 - [AI·모델 활용 설명](docs/ai_model_strategy.md)
+- [Colab 모델 학습 및 배포 연결 가이드](docs/colab_model_training.md)
 - [OCR 기능 구현 방침](docs/ocr_strategy.md)
 - [제출서류 작성 초안](docs/submission_form_draft.md)
 - [최종 QA 체크리스트](docs/final_qa_checklist.md)
@@ -37,6 +38,8 @@ PUBLIC_DATA_SERVICE_KEY=발급받은_공공데이터포털_서비스키
 PUBLIC_DATA_BASE_URL=https://api.odcloud.kr/api
 USE_DEMO_DATA=true
 REQUEST_TIMEOUT_SECONDS=8
+RISK_MODEL_MODE=auto
+RISK_MODEL_PATH=models/risk_models.joblib
 ```
 
 키 설정 확인:
@@ -138,6 +141,16 @@ python scripts/train_risk_models.py --csv .\data\health_checkup.csv --out .\mode
 ```
 
 현재 시연 앱은 공공데이터 기준값과 생활패턴 규칙을 사용한 MVP 위험 엔진으로 동작합니다. 실제 제출 전에는 위 학습 스크립트로 생성한 성능 지표를 사업계획서에 반영합니다.
+
+## 학습 모델 런타임 분기
+
+`RISK_MODEL_MODE`로 예측 엔진을 선택합니다.
+
+- `auto`: 모델 파일이 있으면 학습 모델을 사용하고, 없으면 규칙 기반 엔진으로 자동 전환합니다.
+- `rule`: 항상 규칙 기반 엔진만 사용합니다. Render 무료 환경이나 제출 데모에서 가장 안전합니다.
+- `model`: 모델 파일 로드가 실패하면 오류를 내므로, 다른 호스팅에서 학습 모델 동작 여부를 강하게 확인할 때 사용합니다.
+
+Colab 등 외부 환경에서 `scripts/train_risk_models.py`로 만든 `risk_models.joblib` 파일을 서버의 `RISK_MODEL_PATH` 위치에 배치하면 `/risk/predict`가 학습 모델을 우선 사용할 수 있습니다. 현재 학습 가능한 타깃은 데이터 결측 상태에 따라 달라지며, 지질 수치가 없는 표본에서는 이상지질혈증 모델은 생성되지 않고 규칙 기반 결과를 유지합니다.
 
 ## 안전 원칙
 

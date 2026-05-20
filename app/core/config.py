@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     checkup_group_dataset_path: str = "/15144521/v1/uddi:281e8b27-402b-48db-85d9-d5410a73ce07"
     use_demo_data: bool = True
     request_timeout_seconds: float = 8.0
+    risk_model_mode: str = "auto"
+    risk_model_path: str = "models/risk_models.joblib"
 
     model_config = SettingsConfigDict(
         env_file=".env",

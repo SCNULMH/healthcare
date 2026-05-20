@@ -21,3 +21,7 @@ services:
         value: "false"
       - key: REQUEST_TIMEOUT_SECONDS
         value: "8"
+      - key: RISK_MODEL_MODE
+        value: auto
+      - key: RISK_MODEL_PATH
+        value: models/risk_models.joblib

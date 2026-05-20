@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from app.services.demo_data import demo_profile
@@ -10,6 +10,7 @@ from app.services.diagnosis import (
     create_personal_plan,
     evaluate_health_risks,
 )
+from app.services.model_runtime import model_status, predict_with_model, should_use_model
 
 
 router = APIRouter(prefix="/risk", tags=["risk"])
@@ -65,6 +66,7 @@ async def get_metadata() -> dict:
             "극단적인 식단과 과도한 운동을 권하지 않습니다.",
             "복합 위험은 가장 큰 위험 요인 1~2개부터 개선합니다.",
         ],
+        "model": model_status(),
         "roadmap": [
             "MVP: 건강검진 수치와 걸음수 수동 입력",
             "Next: 검진 결과지 OCR 업로드",
@@ -103,6 +105,16 @@ async def predict_risk(payload: RiskRequest) -> dict:
     health = HealthProfile(**payload.health.model_dump())
     lifestyle = LifestyleProfile(**payload.lifestyle.model_dump())
     risks = evaluate_health_risks(health, lifestyle)
+    engine = {
+        "mode": "rule",
+        "status": "used",
+        "message": "설명 가능한 규칙 기반 AI 엔진을 사용했습니다.",
+    }
+    if should_use_model():
+        try:
+            risks, engine = predict_with_model(health, lifestyle, risks)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
     plan = create_personal_plan(health, lifestyle, risks)
     return {
         "disclaimer": "예측 결과는 진단이 아니며, 정확한 판단과 치료는 의료진 상담이 필요합니다.",
@@ -110,6 +122,7 @@ async def predict_risk(payload: RiskRequest) -> dict:
         "risks": [risk.to_dict() for risk in risks],
         "plan": plan,
         "ai_explanation": _ai_explanation(),
+        "engine": engine,
     }
 
 

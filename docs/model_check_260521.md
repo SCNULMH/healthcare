@@ -96,3 +96,19 @@ python scripts/train_risk_models.py --csv .\data\health_checkup.csv --out .\mode
 - 제출서류에는 규칙 기반 MVP와 학습 가능 파이프라인을 분리해 설명
 - 이상지질혈증 학습 모델을 만들려면 지질 수치가 포함된 원천 CSV 또는 별도 데이터 확보 필요
 - 장기 예후 예측 모델로 확장하려면 진단 이력, 추적 관찰 데이터, 약물 복용 정보가 필요
+
+## 7. 런타임 모델 적용 확인
+
+추가 구현으로 `/risk/predict`는 `RISK_MODEL_MODE` 설정에 따라 예측 엔진을 선택합니다.
+
+- `auto`: 모델 파일이 있으면 학습 모델 사용, 없으면 규칙 기반 fallback
+- `rule`: 규칙 기반 고정
+- `model`: 모델 파일이 없거나 로드 실패 시 503 오류 반환
+
+로컬 확인 결과:
+
+- 기본 `auto` + 모델 파일 없음: 규칙 기반 엔진 사용
+- `auto` + `models/risk_models_3000.joblib`: 당뇨·고혈압 학습 모델 사용, 이상지질혈증은 규칙 기반 유지
+- `model` + 잘못된 모델 경로: `/risk/predict` 503 반환
+
+공공데이터 샘플도 `USE_DEMO_DATA=true`이면 외부 API 호출 없이 데모 행을 반환합니다. API 호출 실패 시에도 데모 샘플로 fallback하도록 구성했습니다.

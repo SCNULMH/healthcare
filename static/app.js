@@ -193,6 +193,7 @@ function render(data) {
         </div>
         <h2>${primaryRisk.label} 가능성이 가장 크게 예측되었습니다.</h2>
         <p>${primaryRisk.summary} BMI ${data.bmi}와 검진 수치, 생활패턴을 함께 반영했습니다.</p>
+        <p class="engine-note">예측 엔진: ${data.engine?.mode || "rule"} · ${data.engine?.message || "설명 가능한 규칙 기반 AI 엔진을 사용했습니다."}</p>
       </div>
     </div>
 

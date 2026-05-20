@@ -16,6 +16,8 @@ class RiskApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["product"], "검진AI 리셋코치")
+        self.assertIn("model", payload)
+        self.assertIn("status", payload["model"])
         self.assertTrue(any("HealthKit" in item for item in payload["roadmap"]))
 
     def test_readiness_reports_key_state(self):
@@ -31,7 +33,7 @@ class RiskApiTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertIn(payload["status"], {"missing_key", "reachable", "network_error", "http_error"})
+        self.assertIn(payload["status"], {"missing_key", "reachable", "network_error", "http_error", "demo", "fallback_demo"})
 
     def test_checkup_row_maps_to_risk_prefill(self):
         row = {
@@ -70,6 +72,7 @@ class RiskApiTests(unittest.TestCase):
         self.assertIn("risks", payload)
         self.assertIn("plan", payload)
         self.assertIn("ai_explanation", payload)
+        self.assertIn("engine", payload)
         self.assertEqual(payload["ai_explanation"]["title"], "AI가 이렇게 판단했어요")
         self.assertEqual(len(payload["ai_explanation"]["steps"]), 3)
         self.assertLessEqual(len(payload["plan"]["today_actions"]), 2)
