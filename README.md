@@ -11,7 +11,7 @@
 - 공모전 제출은 웹앱 형태로 진행합니다.
 - MVP는 건강검진 수치, 최근 7일 평균 걸음수, 생활패턴을 사용자가 직접 입력합니다.
 - 건강 앱 자동 연동은 앱스토어/플레이스토어 승인과 네이티브 권한이 필요하므로 향후 로드맵으로 둡니다.
-- 다음 단계 기능으로 건강검진 결과지 이미지/PDF OCR 업로드를 구현할 수 있게 API 확장 지점을 마련했습니다.
+- 건강검진 결과지 이미지/PDF OCR 업로드는 기본 데모 모드로 제공하며, `OPENAI_API_KEY`를 넣으면 OpenAI Vision 기반 실제 추출로 전환할 수 있습니다.
 
 ## 제출용 문서
 
@@ -40,6 +40,10 @@ USE_DEMO_DATA=true
 REQUEST_TIMEOUT_SECONDS=8
 RISK_MODEL_MODE=auto
 RISK_MODEL_PATH=models/risk_models.joblib
+OCR_PROVIDER=demo
+OCR_FALLBACK_TO_DEMO=true
+OPENAI_API_KEY=
+OPENAI_OCR_MODEL=gpt-4.1-mini
 ```
 
 키 설정 확인:
@@ -68,7 +72,7 @@ PowerShell에서 `.env`가 BOM 포함 UTF-8로 저장되어도 앱은 `utf-8-sig
 - 공복혈당, 혈압, 지질, BMI, 허리둘레, 활동량 등 주요 위험 요인 설명
 - 하루 1~2개의 무리 없는 개선 행동 추천
 - 1주 단위 체크리스트 생성
-- 건강검진 결과지 PDF/이미지 업로드 기반 OCR 데모 흐름
+- 건강검진 결과지 PDF/이미지 업로드 기반 OCR 입력 보조
 
 ## AI 활용 3단계
 
@@ -81,7 +85,7 @@ PowerShell에서 `.env`가 BOM 포함 UTF-8로 저장되어도 앱은 `utf-8-sig
 ## 로드맵
 
 1. MVP: 웹앱 제출, 수동 입력, 데모 데이터
-2. Next: 건강검진 결과지 OCR 업로드로 자동 입력
+2. Next: 건강검진 결과지 OCR 정확도 검증과 사용자 확인 화면 고도화
 3. Future: iOS HealthKit, Android Health Connect 연동
 4. Future: 건강정보고속도로/의료 마이데이터 기반 건강검진 내역 연동
 
@@ -115,6 +119,8 @@ Python Version: 3.10.13
 ```
 
 `PUBLIC_DATA_SERVICE_KEY`는 `render.yaml`에서 `sync: false`로 선언했습니다. 저장소에는 키가 올라가지 않고, Render Dashboard에서만 입력합니다.
+
+OCR을 실제 추출 모드로 테스트하려면 Render 환경변수에 `OCR_PROVIDER=openai`, `OPENAI_API_KEY`, `OPENAI_OCR_MODEL`을 설정합니다. 키가 없거나 OCR API가 실패하면 `OCR_FALLBACK_TO_DEMO=true` 설정에 따라 데모 입력값으로 자동 전환됩니다.
 
 ## PowerShell 한글 출력
 

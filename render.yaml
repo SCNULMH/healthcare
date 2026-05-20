@@ -25,3 +25,15 @@ services:
         value: auto
       - key: RISK_MODEL_PATH
         value: models/risk_models.joblib
+      - key: OCR_PROVIDER
+        value: demo
+      - key: OCR_FALLBACK_TO_DEMO
+        value: "true"
+      - key: OCR_MAX_UPLOAD_BYTES
+        value: "8000000"
+      - key: OCR_REQUEST_TIMEOUT_SECONDS
+        value: "30"
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_OCR_MODEL
+        value: gpt-4.1-mini

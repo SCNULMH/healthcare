@@ -295,11 +295,16 @@ ocrDemo.addEventListener("click", async () => {
       ocrFile.files.length > 0
         ? await fetch("/risk/ocr/extract", { method: "POST", body: formData })
         : await fetch("/risk/ocr/demo", { method: "POST" });
-    if (!response.ok) throw new Error("OCR 데모 처리에 실패했습니다.");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || "OCR 처리에 실패했습니다.");
+    }
 
     const data = await response.json();
     fillForm(data.prefill);
-    ocrStatus.textContent = data.filename ? `${data.filename}: ${data.message}` : data.message;
+    const provider = data.provider ? `[${data.provider}] ` : "";
+    const prefix = data.filename ? `${data.filename}: ` : "";
+    ocrStatus.textContent = `${provider}${prefix}${data.message}`;
   } catch (error) {
     ocrStatus.textContent = error.message;
   }

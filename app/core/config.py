@@ -11,6 +11,12 @@ class Settings(BaseSettings):
     request_timeout_seconds: float = 8.0
     risk_model_mode: str = "auto"
     risk_model_path: str = "models/risk_models.joblib"
+    ocr_provider: str = "demo"
+    ocr_fallback_to_demo: bool = True
+    ocr_max_upload_bytes: int = 8_000_000
+    ocr_request_timeout_seconds: float = 30.0
+    openai_api_key: str | None = None
+    openai_ocr_model: str = "gpt-4.1-mini"
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -21,6 +27,10 @@ class Settings(BaseSettings):
     @property
     def has_public_data_key(self) -> bool:
         return bool(self.public_data_service_key)
+
+    @property
+    def has_openai_key(self) -> bool:
+        return bool(self.openai_api_key)
 
 
 @lru_cache

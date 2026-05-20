@@ -2,7 +2,9 @@ import unittest
 
 from fastapi.testclient import TestClient
 
+from app.core.config import Settings
 from app.main import app
+from app.services.ocr_runtime import UploadedDocument, _build_prefill_from_fields
 from app.services.public_data import map_checkup_row_to_risk_payload
 
 
@@ -18,6 +20,8 @@ class RiskApiTests(unittest.TestCase):
         self.assertEqual(payload["product"], "검진AI 리셋코치")
         self.assertIn("model", payload)
         self.assertIn("status", payload["model"])
+        self.assertIn("ocr", payload)
+        self.assertEqual(payload["ocr"]["provider"], "demo")
         self.assertTrue(any("HealthKit" in item for item in payload["roadmap"]))
 
     def test_readiness_reports_key_state(self):
@@ -86,7 +90,30 @@ class RiskApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "demo_extracted")
+        self.assertEqual(payload["provider"], "demo")
         self.assertEqual(payload["prefill"]["lifestyle"]["avg_steps"], 4300)
+
+    def test_ocr_result_maps_korean_labels_to_prefill(self):
+        document = UploadedDocument("checkup.png", "image/png", b"sample")
+        raw_fields = {
+            "health": {
+                "성별": "남성",
+                "키": "172 cm",
+                "체중": "82 kg",
+                "식전혈당(공복혈당)": "132 mg/dL",
+                "수축기혈압": "133",
+                "HDL콜레스테롤": "42",
+            },
+            "extracted_fields": [],
+        }
+
+        payload = _build_prefill_from_fields(document, raw_fields, Settings())
+
+        self.assertEqual(payload["status"], "ocr_extracted")
+        self.assertEqual(payload["prefill"]["health"]["sex"], "male")
+        self.assertEqual(payload["prefill"]["health"]["height_cm"], 172)
+        self.assertEqual(payload["prefill"]["health"]["fasting_glucose"], 132)
+        self.assertIn("공복혈당", payload["extracted_fields"])
 
 
 if __name__ == "__main__":

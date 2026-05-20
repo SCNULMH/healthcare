@@ -1,8 +1,9 @@
 from typing import Literal
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
+from app.core.config import Settings, get_settings
 from app.services.demo_data import demo_profile
 from app.services.diagnosis import (
     HealthProfile,
@@ -11,6 +12,12 @@ from app.services.diagnosis import (
     evaluate_health_risks,
 )
 from app.services.model_runtime import model_status, predict_with_model, should_use_model
+from app.services.ocr_runtime import (
+    OcrRuntimeError,
+    demo_ocr_result,
+    extract_checkup_values_from_upload,
+    ocr_status,
+)
 
 
 router = APIRouter(prefix="/risk", tags=["risk"])
@@ -67,6 +74,7 @@ async def get_metadata() -> dict:
             "복합 위험은 가장 큰 위험 요인 1~2개부터 개선합니다.",
         ],
         "model": model_status(),
+        "ocr": ocr_status(get_settings()),
         "roadmap": [
             "MVP: 건강검진 수치와 걸음수 수동 입력",
             "Next: 검진 결과지 OCR 업로드",
@@ -128,27 +136,15 @@ async def predict_risk(payload: RiskRequest) -> dict:
 
 @router.post("/ocr/demo")
 async def ocr_demo() -> dict:
-    return {
-        "message": "OCR 데모: 검진 결과지에서 주요 수치를 추출한 것처럼 입력폼을 채웠습니다. 실제 OCR 엔진은 다음 단계에서 연결합니다.",
-        "prefill": demo_profile(),
-    }
+    return demo_ocr_result()
 
 
 @router.post("/ocr/extract")
-async def extract_checkup_values(file: UploadFile = File(...)) -> dict:
-    return {
-        "filename": file.filename,
-        "content_type": file.content_type,
-        "status": "demo_extracted",
-        "message": "업로드한 검진 결과지에서 주요 검진 수치를 추출한 데모 결과입니다. 실제 OCR 엔진 연결 전까지는 샘플 값을 반환합니다.",
-        "prefill": demo_profile(),
-        "extracted_fields": [
-            "수축기혈압",
-            "이완기혈압",
-            "공복혈당",
-            "총콜레스테롤",
-            "HDL",
-            "LDL",
-            "중성지방",
-        ],
-    }
+async def extract_checkup_values(
+    file: UploadFile = File(...),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    try:
+        return await extract_checkup_values_from_upload(file, settings)
+    except OcrRuntimeError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc

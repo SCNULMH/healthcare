@@ -112,3 +112,14 @@ python scripts/train_risk_models.py --csv .\data\health_checkup.csv --out .\mode
 - `model` + 잘못된 모델 경로: `/risk/predict` 503 반환
 
 공공데이터 샘플도 `USE_DEMO_DATA=true`이면 외부 API 호출 없이 데모 행을 반환합니다. API 호출 실패 시에도 데모 샘플로 fallback하도록 구성했습니다.
+
+## 8. OCR 런타임 적용 확인
+
+OCR 입력 보조 기능은 `/risk/ocr/extract`에서 동일한 API 경로로 동작합니다.
+
+- 기본 `OCR_PROVIDER=demo`: 업로드 파일을 저장하지 않고 데모 검진값을 반환
+- `OCR_PROVIDER=openai` + `OPENAI_API_KEY`: OpenAI Responses API에 이미지/PDF를 전달해 검진 수치 JSON 추출
+- OCR 실패, 키 미설정, 미지원 파일 형식: `OCR_FALLBACK_TO_DEMO=true`이면 데모 값으로 자동 전환
+- 반영 전 검증 범위: 혈압, 공복혈당, 콜레스테롤, HDL, LDL, 중성지방, 신장, 체중, 허리둘레
+
+제출 시에는 "OCR은 진단 기능이 아니라 수동 입력 부담을 줄이는 입력 보조 기능"으로 설명합니다. 실제 서비스에서는 OCR 결과를 사용자가 확인·수정한 뒤 위험예측에 반영합니다.
