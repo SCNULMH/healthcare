@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>검진AI 리셋코치</title>
-    <link rel="stylesheet" href="/static/styles.css?v=260527-unknown1" />
+    <link rel="stylesheet" href="/static/styles.css?v=260527-lifestyle1" />
   </head>
   <body>
     <div class="app-shell">
@@ -105,35 +105,32 @@
               <div class="progress-lines"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
             </div>
 
-            <div class="screen-heading checkup-heading">
-              <div>
-                <h2>최근 검진 수치를 입력해 주세요</h2>
-                <p>공복혈당, 혈압, 지질 수치가 위험예측의 핵심 입력값입니다.</p>
-              </div>
-              <label class="unknown-toggle"><input name="lipid_unknown" type="checkbox" /> 정확하게 모름</label>
+            <div class="screen-heading">
+              <h2>최근 검진 수치를 입력해 주세요</h2>
+              <p>공복혈당, 혈압, 지질 수치가 위험예측의 핵심 입력값입니다.</p>
             </div>
 
             <article class="input-card">
-              <div class="card-title"><span class="icon-chip red">🩺</span><strong>혈압</strong></div>
+              <div class="card-title card-title-row"><span class="icon-chip red">❤️</span><strong>혈압</strong><label class="unknown-toggle"><input name="bp_unknown" type="checkbox" /> 모름</label></div>
               <div class="split-inputs">
-                <label>수축기 <input name="systolic_bp" type="number" value="132" /><span class="avg-hint" data-benchmark="systolic">40대 평균 120~130mmHg</span></label>
+                <label>수축기 <input name="systolic_bp" type="number" value="132" /></label>
                 <span>/</span>
-                <label>이완기 <input name="diastolic_bp" type="number" value="86" /><span class="avg-hint" data-benchmark="diastolic">40대 평균 75~85mmHg</span></label>
+                <label>이완기 <input name="diastolic_bp" type="number" value="86" /></label>
               </div>
             </article>
 
             <article class="input-card">
-              <div class="card-title"><span class="icon-chip blue">🩸</span><strong>혈당</strong></div>
-              <label>공복혈당 <input name="fasting_glucose" type="number" value="132" /><span class="avg-hint" data-benchmark="glucose">40대 평균 90~100mg/dL</span></label>
+              <div class="card-title card-title-row"><span class="icon-chip blue">🩸</span><strong>혈당</strong><label class="unknown-toggle"><input name="glucose_unknown" type="checkbox" /> 모름</label></div>
+              <label>공복혈당 <input name="fasting_glucose" type="number" value="132" /></label>
             </article>
 
             <article class="input-card" id="lipid-card">
-              <div class="card-title"><span class="icon-chip yellow">🧪</span><strong>지질 수치</strong></div>
+              <div class="card-title card-title-row"><span class="icon-chip yellow">🟡</span><strong>지질 수치</strong><label class="unknown-toggle"><input name="lipid_unknown" type="checkbox" /> 모름</label></div>
               <div class="card-grid compact">
-                <label>총콜레스테롤 <input name="total_cholesterol" type="number" value="218" /><span class="avg-hint" data-benchmark="total_cholesterol">40대 평균 190~210mg/dL</span></label>
-                <label>HDL <input name="hdl" type="number" value="42" /><span class="avg-hint" data-benchmark="hdl">40대 평균 45~60mg/dL</span></label>
-                <label>LDL <input name="ldl" type="number" value="138" /><span class="avg-hint" data-benchmark="ldl">40대 평균 110~130mg/dL</span></label>
-                <label>중성지방 <input name="triglyceride" type="number" value="185" /><span class="avg-hint" data-benchmark="triglyceride">40대 평균 100~150mg/dL</span></label>
+                <label>총콜레스테롤 <input name="total_cholesterol" type="number" value="218" /></label>
+                <label>HDL <input name="hdl" type="number" value="42" /></label>
+                <label>LDL <input name="ldl" type="number" value="138" /></label>
+                <label>중성지방 <input name="triglyceride" type="number" value="185" /></label>
               </div>
             </article>
 
@@ -179,35 +176,21 @@
             </div>
 
             <div class="card-grid">
-              <label>아침식사
-                <select name="breakfast">
-                  <option value="regular">규칙적</option>
-                  <option value="sometimes" selected>가끔</option>
-                  <option value="rarely">거의 안 함</option>
-                </select>
-              </label>
-              <label>주간 단 음료 <input name="sugary_drinks_per_week" type="number" value="7" /><span class="avg-hint">40대 참고 평균 주 3~4회</span></label>
-              <label>주간 야식 <input name="late_meals_per_week" type="number" value="3" /><span class="avg-hint">40대 참고 평균 주 1~2회</span></label>
-              <label>주간 외식 <input name="eating_out_per_week" type="number" value="5" /><span class="avg-hint">40대 참고 평균 주 3~4회</span></label>
-              <label>수면시간 <input name="sleep_hours" type="number" step="0.5" value="6" /><span class="avg-hint">40대 참고 평균 6.5~7시간</span></label>
+              <label>주간 아침식사 횟수 <input name="breakfast_per_week" type="number" min="0" max="7" value="3" /></label>
+              <label>주간 단 음료 <input name="sugary_drinks_per_week" type="number" value="7" /></label>
+              <label>주간 야식 <input name="late_meals_per_week" type="number" value="3" /></label>
+              <label>주간 외식 <input name="eating_out_per_week" type="number" value="5" /></label>
+              <label>수면시간 <input name="sleep_hours" type="number" step="0.5" value="6" /></label>
               <label>흡연
                 <select name="smoking">
                   <option value="never">비흡연</option>
                   <option value="past" selected>과거 흡연</option>
                   <option value="current">현재 흡연</option>
                 </select>
-                <span class="avg-hint">40대 참고 평균: 비흡연·과거 흡연 비중이 더 큼</span>
               </label>
-              <label>음주
-                <select name="drinking">
-                  <option value="none">안 함</option>
-                  <option value="light">가벼움</option>
-                  <option value="moderate" selected>보통</option>
-                  <option value="heavy">잦음</option>
-                </select>
-                <span class="avg-hint">40대 참고 평균: light~moderate 범위</span>
-              </label>
-              <label class="check-row"><input name="can_prepare_meals" type="checkbox" /> 식사 준비 가능</label>
+              <label>주간 음주 횟수 <input name="drinking_per_week" type="number" min="0" max="14" value="2" /></label>
+              <label>월간 추가 음주 횟수 <input name="drinking_per_month" type="number" min="0" max="31" value="0" /></label>
+              <label>1회 평균 음주량(잔) <input name="drinks_per_session" type="number" min="0" max="30" value="3" /></label>
             </div>
 
             <button class="primary wide bottom-cta" type="submit">AI 위험도 분석하기</button>
@@ -310,6 +293,6 @@
       </form>
     </div>
 
-    <script src="/static/app.js?v=260527-unknown1"></script>
+    <script src="/static/app.js?v=260527-lifestyle1"></script>
   </body>
 </html>

@@ -33,7 +33,14 @@ def map_checkup_row_to_risk_payload(row: dict[str, Any]) -> dict:
 
     smoking_code = _to_int(row.get("흡연상태"), 0)
     lifestyle["smoking"] = {1: "never", 2: "past", 3: "current"}.get(smoking_code, lifestyle["smoking"])
-    lifestyle["drinking"] = "light" if _to_int(row.get("음주여부"), 0) == 1 else "none"
+    if _to_int(row.get("음주여부"), 0) == 1:
+        lifestyle["drinking_per_week"] = 1
+        lifestyle["drinking_per_month"] = 0
+        lifestyle["drinks_per_session"] = 2
+    else:
+        lifestyle["drinking_per_week"] = 0
+        lifestyle["drinking_per_month"] = 0
+        lifestyle["drinks_per_session"] = 0
 
     return {
         "health": health,

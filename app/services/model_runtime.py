@@ -182,7 +182,7 @@ def _feature_row(health: HealthProfile, lifestyle: LifestyleProfile) -> dict[str
         "ldl": health.ldl,
         "triglyceride": health.triglyceride,
         "smoking": lifestyle.smoking,
-        "drinking": lifestyle.drinking,
+        "drinking": lifestyle.drinking_level,
     }
 
 

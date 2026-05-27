@@ -49,6 +49,7 @@ select {
 
 button {
   cursor: pointer;
+  overflow-wrap: anywhere;
 }
 
 .app-shell {
@@ -422,11 +423,13 @@ button {
   margin: 0 0 8px;
   font-size: 24px;
   line-height: 1.28;
+  overflow-wrap: anywhere;
 }
 
 .screen-heading p {
   margin: 0;
   font-size: 14px;
+  overflow-wrap: anywhere;
 }
 
 .checkup-heading {
@@ -467,12 +470,19 @@ button {
   grid-template-columns: 1fr 1fr;
 }
 
+.card-title-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+}
+
 label {
   display: grid;
   gap: 7px;
   color: #475569;
   font-size: 13px;
   font-weight: 800;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .avg-hint {
@@ -492,6 +502,7 @@ select {
   color: var(--text);
   padding: 0 12px;
   outline: none;
+  min-width: 0;
 }
 
 input:focus,
@@ -513,6 +524,8 @@ select:focus {
   background: white;
   padding: 16px;
   box-shadow: var(--shadow);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .account-card {
@@ -918,6 +931,7 @@ body.logged-in #account-auth-actions {
   margin: 0;
   color: #434654;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .engine-note {

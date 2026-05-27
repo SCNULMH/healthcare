@@ -149,6 +149,9 @@ def get_profile(user_id: str) -> dict[str, Any] | None:
 
 def update_profile(user_id: str, profile: dict[str, Any]) -> dict[str, Any]:
     user = get_profile(user_id)
+    if not user and firebase_backend.is_enabled() and profile.get("email"):
+        user = {"user_id": user_id, "email": profile["email"], "profile": {}}
+        firebase_backend.save_user(user_id, {"user_id": user_id, "email": profile["email"], "profile": {}, "updated_at": _now()})
     if not user:
         raise ValueError("사용자를 찾을 수 없습니다.")
     merged = {**user.get("profile", {}), **_clean_profile(profile)}
@@ -231,6 +234,7 @@ def _clean_profile(profile: dict[str, Any]) -> dict[str, Any]:
         cleaned["medical_note"] = _dedupe_note(cleaned["medical_note"])
     for key in ("conditions", "medications", "allergies"):
         cleaned.pop(key, None)
+    cleaned.pop("email", None)
     return cleaned
 
 

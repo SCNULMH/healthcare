@@ -30,18 +30,20 @@ class HealthProfileIn(BaseModel):
     height_cm: float = Field(gt=120, lt=230)
     weight_kg: float = Field(gt=30, lt=200)
     waist_cm: float | None = Field(default=None, gt=40, lt=160)
-    systolic_bp: int = Field(ge=70, le=240)
-    diastolic_bp: int = Field(ge=40, le=160)
-    fasting_glucose: int = Field(ge=50, le=400)
+    systolic_bp: int | None = Field(default=None, ge=70, le=240)
+    diastolic_bp: int | None = Field(default=None, ge=40, le=160)
+    fasting_glucose: int | None = Field(default=None, ge=50, le=400)
     total_cholesterol: int | None = Field(default=None, ge=80, le=400)
     hdl: int | None = Field(default=None, ge=10, le=150)
     ldl: int | None = Field(default=None, ge=30, le=300)
     triglyceride: int | None = Field(default=None, ge=30, le=800)
+    bp_unknown: bool = False
+    glucose_unknown: bool = False
     lipid_unknown: bool = False
 
 
 class LifestyleProfileIn(BaseModel):
-    breakfast: Literal["regular", "sometimes", "rarely"]
+    breakfast_per_week: int = Field(ge=0, le=7)
     sugary_drinks_per_week: int = Field(ge=0, le=30)
     late_meals_per_week: int = Field(ge=0, le=14)
     exercise_per_week: int = Field(ge=0, le=14)
@@ -49,9 +51,10 @@ class LifestyleProfileIn(BaseModel):
     sleep_hours: float = Field(ge=3, le=12)
     avg_steps: int = Field(ge=0, le=50000)
     smoking: Literal["never", "past", "current"]
-    drinking: Literal["none", "light", "moderate", "heavy"]
+    drinking_per_week: int = Field(ge=0, le=14)
+    drinking_per_month: int = Field(ge=0, le=31)
+    drinks_per_session: int = Field(ge=0, le=30)
     available_minutes_per_day: int = Field(ge=5, le=120)
-    can_prepare_meals: bool
 
 
 class RiskRequest(BaseModel):
@@ -135,9 +138,10 @@ def _ai_explanation() -> dict:
         ),
         "criteria": [
             {"name": "당뇨", "primary": "공복혈당 100 이상 주의, 126 이상 위험", "lifestyle": "단 음료 주 5회 이상, 운동 주 1회 이하, 5,000보 미만이면 가중"},
-            {"name": "고혈압", "primary": "130/80 이상 주의, 140/90 이상 위험", "lifestyle": "외식 주 5회 이상, 음주 moderate 이상, 운동 부족, 5,000보 미만이면 가중"},
+            {"name": "고혈압", "primary": "130/80 이상 주의, 140/90 이상 위험", "lifestyle": "외식 주 5회 이상, 음주 월 4회 초과 또는 1회 3잔 이상, 운동 부족, 5,000보 미만이면 가중"},
             {"name": "이상지질혈증", "primary": "총콜레스테롤 200 이상, LDL 130 이상, 중성지방 150 이상, HDL 낮음이면 주의", "lifestyle": "외식·야식·운동 부족·낮은 걸음수에 가중"},
             {"name": "BMI/허리둘레", "primary": "BMI 25 이상 과체중, 30 이상 비만. 허리둘레 남 90cm/여 85cm 이상 복부비만", "lifestyle": "체중 자체보다 식사·활동 기록 개선을 우선 권장"},
+            {"name": "생활요인 점수", "primary": "검진 수치를 모르면 해당 직접값은 제외", "lifestyle": "단 음료 +8, 운동 부족 +7, 5,000보 미만 +5, 외식 +7, 음주 보통 +6/잦음 +8, 야식 +5, 지질 관련 외식 +6"},
         ],
     }
 
@@ -148,6 +152,10 @@ def _input_notes(health: HealthProfile) -> list[str]:
         notes.append(
             "허리둘레가 입력되지 않아 복부비만 직접 판정은 제외하고 BMI, 혈압, 혈당, 지질 수치와 생활패턴 중심으로 분석했습니다."
         )
+    if health.bp_unknown:
+        notes.append("혈압을 모름으로 표시해 혈압 직접값은 제외하고 BMI·음주·활동·외식 기준으로 반영했습니다.")
+    if health.glucose_unknown:
+        notes.append("공복혈당을 모름으로 표시해 혈당 직접값은 제외하고 BMI·단 음료·운동·걸음수 기준으로 반영했습니다.")
     if health.lipid_unknown:
         notes.append("지질 수치를 정확하게 모름으로 표시해 총콜레스테롤·HDL·LDL·중성지방 직접값은 제외하고 활동·생활 기준으로 반영했습니다.")
     return notes
@@ -160,6 +168,10 @@ def _reliability_summary(
 ) -> dict:
     performance = model_performance_summary()
     optional_missing = 1 if health.waist_cm is None else 0
+    if health.bp_unknown:
+        optional_missing += 2
+    if health.glucose_unknown:
+        optional_missing += 1
     if health.lipid_unknown:
         optional_missing += 4
     required_count = 23
@@ -195,7 +207,18 @@ def _reliability_summary(
 
 @router.post("/predict")
 async def predict_risk(payload: RiskRequest) -> dict:
-    health = HealthProfile(**payload.health.model_dump())
+    health_data = payload.health.model_dump()
+    if health_data.get("bp_unknown"):
+        health_data["systolic_bp"] = None
+        health_data["diastolic_bp"] = None
+    if health_data.get("glucose_unknown"):
+        health_data["fasting_glucose"] = None
+    if health_data.get("lipid_unknown"):
+        health_data["total_cholesterol"] = None
+        health_data["hdl"] = None
+        health_data["ldl"] = None
+        health_data["triglyceride"] = None
+    health = HealthProfile(**health_data)
     lifestyle = LifestyleProfile(**payload.lifestyle.model_dump())
     risks = evaluate_health_risks(health, lifestyle)
     engine = {
@@ -203,12 +226,15 @@ async def predict_risk(payload: RiskRequest) -> dict:
         "status": "used",
         "message": "설명 가능한 규칙 기반 AI 엔진을 사용했습니다.",
     }
-    if should_use_model() and health.lipid_unknown:
+    has_unknown_core = health.bp_unknown or health.glucose_unknown or health.lipid_unknown
+    if should_use_model() and has_unknown_core:
         engine = {
             "mode": "rule",
-            "status": "used_lipid_unknown",
+            "status": "used_unknown_checkup",
+            "message": "일부 검진 수치가 정확하지 않아 학습 모델 대신 설명 가능한 규칙 기반 엔진으로 분석했습니다.",
             "message": "지질 수치가 정확하지 않아 학습 모델 대신 설명 가능한 규칙 기반 엔진으로 분석했습니다.",
         }
+        engine["message"] = "일부 검진 수치가 정확하지 않아 학습 모델 대신 설명 가능한 규칙 기반 엔진으로 분석했습니다."
     elif should_use_model():
         try:
             risks, engine = predict_with_model(health, lifestyle, risks)

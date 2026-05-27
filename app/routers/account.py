@@ -20,6 +20,7 @@ class ProfilePayload(BaseModel):
     medications: str | None = Field(default=None, max_length=500)
     allergies: str | None = Field(default=None, max_length=500)
     medical_note: str | None = Field(default=None, max_length=1000)
+    email: str | None = Field(default=None, max_length=160)
 
 
 class RegisterPayload(BaseModel):

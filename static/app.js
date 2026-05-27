@@ -25,6 +25,8 @@ const recordMemo = document.querySelector("#record-memo");
 const recordSave = document.querySelector("#record-save");
 const scoreHelpToggle = document.querySelector("#score-help-toggle");
 const scoreHelpPanel = document.querySelector("#score-help-panel");
+const bpUnknown = document.querySelector("[name='bp_unknown']");
+const glucoseUnknown = document.querySelector("[name='glucose_unknown']");
 const lipidUnknown = document.querySelector("[name='lipid_unknown']");
 const lipidCard = document.querySelector("#lipid-card");
 
@@ -51,10 +53,12 @@ const healthFields = [
 ];
 
 const optionalNumericFields = new Set(["waist_cm"]);
+const bpFields = new Set(["systolic_bp", "diastolic_bp"]);
+const glucoseFields = new Set(["fasting_glucose"]);
 const lipidFields = new Set(["total_cholesterol", "hdl", "ldl", "triglyceride"]);
 
 const lifestyleFields = [
-  "breakfast",
+  "breakfast_per_week",
   "sugary_drinks_per_week",
   "late_meals_per_week",
   "exercise_per_week",
@@ -62,9 +66,10 @@ const lifestyleFields = [
   "sleep_hours",
   "avg_steps",
   "smoking",
-  "drinking",
+  "drinking_per_week",
+  "drinking_per_month",
+  "drinks_per_session",
   "available_minutes_per_day",
-  "can_prepare_meals",
 ];
 
 const levelLabels = {
@@ -110,12 +115,18 @@ function readPayload() {
   const data = new FormData(form);
   const health = {};
   const lifestyle = {};
+  const isBpUnknown = data.get("bp_unknown") === "on";
+  const isGlucoseUnknown = data.get("glucose_unknown") === "on";
   const isLipidUnknown = data.get("lipid_unknown") === "on";
 
   for (const field of healthFields) {
     const value = data.get(field);
     if (field === "sex") {
       health[field] = value;
+    } else if (isBpUnknown && bpFields.has(field)) {
+      health[field] = null;
+    } else if (isGlucoseUnknown && glucoseFields.has(field)) {
+      health[field] = null;
     } else if (isLipidUnknown && lipidFields.has(field)) {
       health[field] = null;
     } else if (optionalNumericFields.has(field) && String(value).trim() === "") {
@@ -124,12 +135,12 @@ function readPayload() {
       health[field] = Number(value);
     }
   }
+  health.bp_unknown = isBpUnknown;
+  health.glucose_unknown = isGlucoseUnknown;
   health.lipid_unknown = isLipidUnknown;
 
   for (const field of lifestyleFields) {
-    if (field === "can_prepare_meals") {
-      lifestyle[field] = data.get(field) === "on";
-    } else if (["breakfast", "smoking", "drinking"].includes(field)) {
+    if (["smoking"].includes(field)) {
       lifestyle[field] = data.get(field);
     } else {
       lifestyle[field] = Number(data.get(field));
@@ -179,16 +190,23 @@ function renderBenchmarkSummary() {
       <strong>${context.decade}대 ${context.sexLabel} 평균 기준</strong>
       <p>혈압 ${table.systolic}/${table.diastolic}, 공복혈당 ${table.glucose}</p>
       <p>${lipidText}</p>
+      <p>음주 기준: 입력한 주간/월간 횟수와 1회 평균 잔 수를 합산해 안 함·가벼움·보통·잦음으로 내부 분류하고, 보통 이상이면 혈압 위험 점수에 반영합니다.</p>
     </div>
   `;
 }
 
 function updateUnknownState() {
-  const unknown = Boolean(lipidUnknown?.checked);
-  lipidCard?.classList.toggle("muted-card", unknown);
-  lipidFields.forEach((field) => {
-    const input = form.elements[field];
-    if (input) input.disabled = unknown;
+  const groups = [
+    { checked: Boolean(bpUnknown?.checked), fields: bpFields, card: bpUnknown?.closest(".input-card") },
+    { checked: Boolean(glucoseUnknown?.checked), fields: glucoseFields, card: glucoseUnknown?.closest(".input-card") },
+    { checked: Boolean(lipidUnknown?.checked), fields: lipidFields, card: lipidCard },
+  ];
+  groups.forEach(({ checked, fields, card }) => {
+    card?.classList.toggle("muted-card", checked);
+    fields.forEach((field) => {
+      const input = form.elements[field];
+      if (input) input.disabled = checked;
+    });
   });
 }
 
@@ -260,7 +278,6 @@ function render(data) {
         <article class="action-card">
           <h3>${action.title}</h3>
           <p>${action.detail}</p>
-          <p class="muted">난이도: ${action.difficulty}</p>
           ${action.impact ? `<p class="impact-note">${action.impact}</p>` : ""}
         </article>
       `,
@@ -664,6 +681,7 @@ async function loginAccount() {
 function buildProfilePayload() {
   const medicalNote = profileMedicalNote.value.trim();
   const payload = {};
+  if (currentUser?.email) payload.email = currentUser.email;
   if (profileName.value.trim()) payload.name = profileName.value.trim();
   if (profileBirthYear.value) payload.birth_year = Number(profileBirthYear.value);
   if (profileSex?.value) payload.sex = profileSex.value;
@@ -792,6 +810,8 @@ accountRegister.addEventListener("click", registerAccount);
 accountLogin.addEventListener("click", loginAccount);
 profileSave.addEventListener("click", saveProfile);
 recordSave.addEventListener("click", saveMedicalRecord);
+bpUnknown?.addEventListener("change", updateUnknownState);
+glucoseUnknown?.addEventListener("change", updateUnknownState);
 lipidUnknown?.addEventListener("change", updateUnknownState);
 form.elements.age?.addEventListener("input", updateBenchmarks);
 form.elements.sex?.addEventListener("change", updateBenchmarks);

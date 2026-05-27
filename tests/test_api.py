@@ -64,7 +64,7 @@ class RiskApiTests(unittest.TestCase):
         self.assertEqual(payload["health"]["age"], 68)
         self.assertEqual(payload["health"]["fasting_glucose"], 84)
         self.assertEqual(payload["lifestyle"]["smoking"], "never")
-        self.assertEqual(payload["lifestyle"]["drinking"], "none")
+        self.assertEqual(payload["lifestyle"]["drinking_per_week"], 0)
         self.assertEqual(payload["source"]["year"], "2022")
 
     def test_demo_payload_predicts_successfully(self):

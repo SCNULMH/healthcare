@@ -10,7 +10,7 @@ from app.services.diagnosis import (
 
 def lifestyle(**overrides):
     base = {
-        "breakfast": "sometimes",
+        "breakfast_per_week": 3,
         "sugary_drinks_per_week": 7,
         "late_meals_per_week": 3,
         "exercise_per_week": 0,
@@ -18,9 +18,10 @@ def lifestyle(**overrides):
         "sleep_hours": 6,
         "avg_steps": 4300,
         "smoking": "never",
-        "drinking": "moderate",
+        "drinking_per_week": 2,
+        "drinking_per_month": 0,
+        "drinks_per_session": 3,
         "available_minutes_per_day": 15,
-        "can_prepare_meals": False,
     }
     base.update(overrides)
     return LifestyleProfile(**base)
