@@ -417,6 +417,11 @@ async function accountRequest(path, body, method = "POST") {
 
 async function registerAccount() {
   try {
+    if (!accountEmail.value || accountPassword.value.length < 8) {
+      accountStatus.textContent = "이메일과 8자 이상 비밀번호를 입력해 주세요.";
+      return;
+    }
+    accountStatus.textContent = "계정을 생성하는 중입니다.";
     const data = await accountRequest("/account/register", {
       email: accountEmail.value,
       password: accountPassword.value,
@@ -430,6 +435,11 @@ async function registerAccount() {
 
 async function loginAccount() {
   try {
+    if (!accountEmail.value || accountPassword.value.length < 8) {
+      accountStatus.textContent = "이메일과 8자 이상 비밀번호를 입력해 주세요.";
+      return;
+    }
+    accountStatus.textContent = "로그인하는 중입니다.";
     const data = await accountRequest("/account/login", {
       email: accountEmail.value,
       password: accountPassword.value,
@@ -563,6 +573,15 @@ accountRegister.addEventListener("click", registerAccount);
 accountLogin.addEventListener("click", loginAccount);
 profileSave.addEventListener("click", saveProfile);
 recordSave.addEventListener("click", saveMedicalRecord);
+
+[accountEmail, accountPassword].forEach((input) => {
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      loginAccount();
+    }
+  });
+});
 
 document.addEventListener("click", (event) => {
   const dynamicTarget = event.target.closest("[data-screen-target]");
