@@ -267,7 +267,16 @@ function render(data) {
       </div>
     </div>
 
-    <section class="result-section ai-explain-section">
+    <div class="result-tabbar" role="tablist" aria-label="검진 결과 보기">
+      <button class="active" type="button" data-result-panel="result-panel-criteria">기준</button>
+      <button type="button" data-result-panel="result-panel-risks">위험도</button>
+      <button type="button" data-result-panel="result-panel-reliability">신뢰도</button>
+      <button type="button" data-result-panel="result-panel-actions">추천</button>
+      <button type="button" data-result-panel="result-panel-weekly">1주</button>
+    </div>
+
+    <div id="result-carousel" class="result-carousel" aria-label="검진 결과 탭">
+      <section id="result-panel-criteria" class="result-section result-panel ai-explain-section">
       <div class="screen-heading">
         <h2>${data.ai_explanation?.title || "AI가 이렇게 판단했어요"}</h2>
         <p>${data.ai_explanation?.model_note || ""}</p>
@@ -276,7 +285,7 @@ function render(data) {
       <div class="criteria-list">${criteriaCards}</div>
     </section>
 
-    <section class="result-section">
+      <section id="result-panel-risks" class="result-section result-panel">
       <div class="screen-heading">
         <h2>AI 질환별 위험도</h2>
         <p>${data.disclaimer}</p>
@@ -286,7 +295,7 @@ function render(data) {
 
     ${reliability}
 
-    <section class="result-section">
+      <section id="result-panel-actions" class="result-section result-panel">
       <div class="screen-heading">
         <h2>AI 개인화 추천</h2>
         <p>${data.plan.title}</p>
@@ -295,16 +304,56 @@ function render(data) {
       <div class="impact-list">${impactSummary}</div>
     </section>
 
-    <section class="result-section">
+      <section id="result-panel-weekly" class="result-section result-panel">
       <div class="screen-heading">
         <h2>1주 체크리스트</h2>
         <p>${data.plan.safety_note}</p>
       </div>
-      <div class="weekly-list">${goals}</div>
-    </section>
+        <div class="weekly-list">${goals}</div>
+      </section>
+    </div>
   `;
   goToScreen("result");
+  bindResultTabs();
   document.querySelector("#save-analysis").addEventListener("click", saveLatestAnalysis);
+}
+
+function bindResultTabs() {
+  const tabbar = document.querySelector(".result-tabbar");
+  const carousel = document.querySelector("#result-carousel");
+  if (!tabbar || !carousel) return;
+
+  const tabs = [...tabbar.querySelectorAll("[data-result-panel]")];
+  const panels = tabs
+    .map((tab) => document.querySelector(`#${tab.dataset.resultPanel}`))
+    .filter(Boolean);
+
+  function activate(panelId) {
+    tabs.forEach((tab) => {
+      tab.classList.toggle("active", tab.dataset.resultPanel === panelId);
+    });
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const panel = document.querySelector(`#${tab.dataset.resultPanel}`);
+      if (!panel) return;
+      carousel.scrollTo({ left: panel.offsetLeft - carousel.offsetLeft, behavior: "smooth" });
+      activate(tab.dataset.resultPanel);
+    });
+  });
+
+  carousel.addEventListener("scroll", () => {
+    const left = carousel.scrollLeft;
+    const nearest = panels.reduce(
+      (best, panel) => {
+        const distance = Math.abs(panel.offsetLeft - carousel.offsetLeft - left);
+        return distance < best.distance ? { panel, distance } : best;
+      },
+      { panel: panels[0], distance: Number.POSITIVE_INFINITY },
+    ).panel;
+    if (nearest) activate(nearest.id);
+  }, { passive: true });
 }
 
 async function saveLatestAnalysis() {
@@ -362,7 +411,7 @@ function renderReliability(reliability) {
     })
     .join("");
   return `
-    <section class="result-section reliability-section">
+    <section id="result-panel-reliability" class="result-section result-panel reliability-section">
       <div class="screen-heading">
         <h2>신뢰도와 평균 비교</h2>
         <p>입력값 완성도 ${reliability.input_completeness}% · 예측 엔진 ${reliability.engine_mode}</p>
@@ -471,12 +520,17 @@ function setCurrentUser(user) {
     accountStatus.textContent = `${displayId} 아이디로 로그인되었습니다.`;
     accountAuthForm.hidden = true;
     accountAuthActions.hidden = true;
+    accountAuthForm.style.display = "none";
+    accountAuthActions.style.display = "none";
+    accountPassword.value = "";
     fillAccountProfile(user.profile || {});
   } else {
     localStorage.removeItem("resetCoachUser");
     accountStatus.textContent = "로그인하면 분석 결과와 이전 진료기록을 Firebase에 저장합니다.";
     accountAuthForm.hidden = false;
     accountAuthActions.hidden = false;
+    accountAuthForm.style.display = "";
+    accountAuthActions.style.display = "";
   }
   refreshHistory();
 }

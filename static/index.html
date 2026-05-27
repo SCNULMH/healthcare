@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>검진AI 리셋코치</title>
-    <link rel="stylesheet" href="/static/styles.css?v=260527-score1" />
+    <link rel="stylesheet" href="/static/styles.css?v=260527-tabs1" />
   </head>
   <body>
     <div class="app-shell">
@@ -113,24 +113,24 @@
             <article class="input-card">
               <div class="card-title"><span class="icon-chip red">♥</span><strong>혈압</strong></div>
               <div class="split-inputs">
-                <label>수축기 <input name="systolic_bp" type="number" value="132" /></label>
+                <label>수축기 <input name="systolic_bp" type="number" value="132" /><span class="avg-hint">40대 참고 평균 120~130mmHg · 130 이상 주의</span></label>
                 <span>/</span>
-                <label>이완기 <input name="diastolic_bp" type="number" value="86" /></label>
+                <label>이완기 <input name="diastolic_bp" type="number" value="86" /><span class="avg-hint">40대 참고 평균 75~85mmHg · 80 이상 주의</span></label>
               </div>
             </article>
 
             <article class="input-card">
               <div class="card-title"><span class="icon-chip blue">●</span><strong>혈당</strong></div>
-              <label>공복혈당 <input name="fasting_glucose" type="number" value="132" /></label>
+              <label>공복혈당 <input name="fasting_glucose" type="number" value="132" /><span class="avg-hint">평균 90~100mg/dL · 100 이상 주의, 126 이상 위험</span></label>
             </article>
 
             <article class="input-card">
               <div class="card-title"><span class="icon-chip yellow">≋</span><strong>지질 수치</strong></div>
               <div class="card-grid compact">
-                <label>총콜레스테롤 <input name="total_cholesterol" type="number" value="218" /></label>
-                <label>HDL <input name="hdl" type="number" value="42" /></label>
-                <label>LDL <input name="ldl" type="number" value="138" /></label>
-                <label>중성지방 <input name="triglyceride" type="number" value="185" /></label>
+                <label>총콜레스테롤 <input name="total_cholesterol" type="number" value="218" /><span class="avg-hint">평균 190~210mg/dL · 200 이상 주의</span></label>
+                <label>HDL <input name="hdl" type="number" value="42" /><span class="avg-hint">평균 45~60mg/dL · 낮을수록 위험</span></label>
+                <label>LDL <input name="ldl" type="number" value="138" /><span class="avg-hint">평균 110~130mg/dL · 130 이상 주의</span></label>
+                <label>중성지방 <input name="triglyceride" type="number" value="185" /><span class="avg-hint">평균 100~150mg/dL · 150 이상 주의</span></label>
               </div>
             </article>
 
@@ -150,15 +150,15 @@
 
             <article class="activity-card">
               <span class="activity-icon">👟</span>
-              <label>최근 7일 평균 걸음수 <input name="avg_steps" type="number" value="4300" /></label>
+              <label>최근 7일 평균 걸음수 <input name="avg_steps" type="number" value="4300" /><span class="avg-hint">40대 참고 평균 하루 6,000~7,000보</span></label>
             </article>
             <article class="activity-card">
               <span class="activity-icon">💪</span>
-              <label>주간 운동 횟수 <input name="exercise_per_week" type="number" value="1" /></label>
+              <label>주간 운동 횟수 <input name="exercise_per_week" type="number" value="1" /><span class="avg-hint">40대 참고 평균 주 2~3회</span></label>
             </article>
             <article class="activity-card">
               <span class="activity-icon">⏱️</span>
-              <label>하루 가능 시간(분) <input name="available_minutes_per_day" type="number" value="15" /></label>
+              <label>하루 가능 시간(분) <input name="available_minutes_per_day" type="number" value="15" /><span class="avg-hint">권장 시작점 하루 20~30분</span></label>
             </article>
 
             <button class="primary wide bottom-cta" type="button" data-screen-target="lifestyle">다음: 생활패턴</button>
@@ -300,6 +300,6 @@
       </form>
     </div>
 
-    <script src="/static/app.js?v=260527-score1"></script>
+    <script src="/static/app.js?v=260527-tabs1"></script>
   </body>
 </html>

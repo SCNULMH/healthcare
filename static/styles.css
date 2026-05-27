@@ -26,6 +26,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   display: flex;
   justify-content: center;
@@ -942,6 +946,60 @@ select:focus {
 .save-analysis-status {
   margin-top: 8px !important;
   font-size: 12px;
+}
+
+.result-tabbar {
+  position: sticky;
+  top: -22px;
+  z-index: 4;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 8px;
+  margin: 14px 0 12px;
+  overflow-x: auto;
+  padding: 10px 0;
+  background: rgba(248, 250, 252, 0.94);
+  scrollbar-width: none;
+}
+
+.result-tabbar::-webkit-scrollbar,
+.result-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.result-tabbar button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  color: var(--muted);
+  padding: 0 13px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.result-tabbar button.active {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: white;
+}
+
+.result-carousel {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.result-panel {
+  min-width: 0;
+  margin: 0;
+  scroll-snap-align: start;
 }
 
 .risk-list,
