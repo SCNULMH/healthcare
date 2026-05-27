@@ -14,6 +14,8 @@ const accountEmail = document.querySelector("#account-email");
 const accountPassword = document.querySelector("#account-password");
 const accountRegister = document.querySelector("#account-register");
 const accountLogin = document.querySelector("#account-login");
+const accountAuthForm = document.querySelector("#account-auth-form");
+const accountAuthActions = document.querySelector("#account-auth-actions");
 const profileName = document.querySelector("#profile-name");
 const profileBirthYear = document.querySelector("#profile-birth-year");
 const profileMedicalNote = document.querySelector("#profile-medical-note");
@@ -388,11 +390,16 @@ function setCurrentUser(user) {
   activeClientId = user?.user_id || getClientId();
   if (user) {
     localStorage.setItem("resetCoachUser", JSON.stringify(user));
-    accountStatus.textContent = `${user.email} 계정으로 로그인했습니다.`;
+    const displayId = user.email || user.user_id;
+    accountStatus.textContent = `${displayId} 아이디로 로그인되었습니다.`;
+    accountAuthForm.hidden = true;
+    accountAuthActions.hidden = true;
     fillAccountProfile(user.profile || {});
   } else {
     localStorage.removeItem("resetCoachUser");
     accountStatus.textContent = "로그인하면 분석 결과와 이전 진료기록을 Firebase에 저장합니다.";
+    accountAuthForm.hidden = false;
+    accountAuthActions.hidden = false;
   }
   refreshHistory();
 }

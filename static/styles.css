@@ -415,6 +415,11 @@ select:focus {
   gap: 12px;
 }
 
+.account-auth-form {
+  display: grid;
+  gap: 12px;
+}
+
 .account-section {
   position: relative;
   border-color: #dbeafe;
