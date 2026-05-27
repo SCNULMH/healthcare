@@ -35,9 +35,9 @@
 
             <div class="health-score-card">
               <div>
-                <span>오늘의 건강 리셋 점수</span>
-                <strong>87.2</strong>
-                <p>검진 수치와 생활패턴을 함께 분석합니다.</p>
+                <span id="home-score-label">오늘의 건강 리셋 점수</span>
+                <strong id="home-score">--</strong>
+                <p id="home-score-summary">검진 수치와 생활패턴을 함께 분석합니다.</p>
               </div>
               <div class="spark-bars" aria-hidden="true">
                 <i style="height: 34%"></i>
@@ -47,6 +47,30 @@
                 <i style="height: 64%"></i>
                 <i style="height: 90%"></i>
               </div>
+            </div>
+
+            <div id="history-summary" class="history-card">
+              <strong>이전 분석 기록</strong>
+              <p>아직 저장된 분석 결과가 없습니다. 첫 분석 후 변화 추이를 확인할 수 있습니다.</p>
+            </div>
+
+            <div class="account-card">
+              <div class="card-title"><span class="icon-chip blue">ID</span><strong>계정·진료기록</strong></div>
+              <p id="account-status" class="muted">로그인하면 분석 결과와 이전 진료기록을 Firebase에 저장합니다.</p>
+              <label>이메일 <input id="account-email" type="email" placeholder="name@example.com" autocomplete="email" /></label>
+              <label>비밀번호 <input id="account-password" type="password" placeholder="8자 이상" autocomplete="current-password" /></label>
+              <div class="account-actions">
+                <button id="account-register" class="ghost" type="button">가입</button>
+                <button id="account-login" class="primary" type="button">로그인</button>
+              </div>
+              <div class="card-grid compact">
+                <label>이름 <input id="profile-name" type="text" placeholder="선택" /></label>
+                <label>출생연도 <input id="profile-birth-year" type="number" placeholder="예: 1985" /></label>
+              </div>
+              <label>질환/복용약/알레르기 <input id="profile-medical-note" type="text" placeholder="예: 고혈압약 복용, 페니실린 알레르기" /></label>
+              <button id="profile-save" class="ghost wide" type="button">개인정보 저장</button>
+              <label>이전 진료기록 <input id="record-memo" type="text" placeholder="예: 2025.12 내과 혈압 상담" /></label>
+              <button id="record-save" class="ghost wide" type="button">진료기록 추가</button>
             </div>
 
             <div class="quick-actions">
@@ -78,7 +102,7 @@
               </label>
               <label>키(cm) <input name="height_cm" type="number" value="172" /></label>
               <label>체중(kg) <input name="weight_kg" type="number" value="82" /></label>
-              <label>허리둘레(cm) <input name="waist_cm" type="number" value="93" /></label>
+              <label>허리둘레(cm) <input name="waist_cm" type="number" value="93" placeholder="모르면 비워두기" /></label>
             </div>
 
             <button class="primary wide bottom-cta" type="button" data-screen-target="checkup">다음: 검진 수치</button>

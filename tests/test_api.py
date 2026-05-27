@@ -77,9 +77,28 @@ class RiskApiTests(unittest.TestCase):
         self.assertIn("plan", payload)
         self.assertIn("ai_explanation", payload)
         self.assertIn("engine", payload)
+        self.assertIn("reliability", payload)
         self.assertEqual(payload["ai_explanation"]["title"], "AI가 이렇게 판단했어요")
         self.assertEqual(len(payload["ai_explanation"]["steps"]), 3)
         self.assertLessEqual(len(payload["plan"]["today_actions"]), 2)
+        self.assertIn("cards", payload["reliability"])
+
+    def test_predict_stores_anonymous_history_and_compares(self):
+        demo = self.client.get("/risk/demo").json()
+        demo["client_id"] = "test-client-history"
+
+        first = self.client.post("/risk/predict", json=demo)
+        second_payload = self.client.get("/risk/demo").json()
+        second_payload["client_id"] = "test-client-history"
+        second_payload["health"]["fasting_glucose"] = 99
+        second = self.client.post("/risk/predict", json=second_payload)
+        history = self.client.get("/risk/history/test-client-history")
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(second.json()["comparison"]["status"], "compared")
+        self.assertEqual(history.status_code, 200)
+        self.assertGreaterEqual(len(history.json()["items"]), 2)
 
     def test_ocr_extract_accepts_file_upload(self):
         response = self.client.post(

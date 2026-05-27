@@ -12,7 +12,7 @@ class HealthProfile:
     sex: Sex
     height_cm: float
     weight_kg: float
-    waist_cm: float
+    waist_cm: float | None
     systolic_bp: int
     diastolic_bp: int
     fasting_glucose: int
@@ -107,7 +107,7 @@ def _diabetes_risk(health: HealthProfile, lifestyle: LifestyleProfile) -> RiskRe
         reasons.append("공복혈당이 주의 범위입니다.")
 
     score += _bmi_score(health, reasons)
-    if health.waist_cm >= _waist_high_cutoff(health.sex):
+    if health.waist_cm is not None and health.waist_cm >= _waist_high_cutoff(health.sex):
         score += 8
         reasons.append("허리둘레가 복부비만 위험 범위입니다.")
     if lifestyle.sugary_drinks_per_week >= 5:

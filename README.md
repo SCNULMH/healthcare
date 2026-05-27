@@ -61,13 +61,20 @@ python scripts/test_public_data_key.py
 
 PowerShell에서 `.env`가 BOM 포함 UTF-8로 저장되어도 앱은 `utf-8-sig`로 읽도록 설정되어 있습니다.
 
+분석 기록은 기본값 `DATABASE_BACKEND=sqlite`, `DATABASE_PATH=data/reset_coach.sqlite3`로 저장됩니다. 이름, 전화번호, 주민번호 같은 개인식별 정보는 저장하지 않고 브라우저별 익명 ID와 분석 수치만 저장합니다.
+
+Firebase를 사용할 때는 `DATABASE_BACKEND=firebase`, `FIREBASE_CREDENTIALS_PATH`, `FIREBASE_PROJECT_ID`를 설정합니다. 서비스 계정 JSON은 저장소에 올리지 않고 로컬 `.env` 또는 Render Secret File로만 연결합니다.
+
 ## MVP 기능
 
 - 건강검진 수치 직접 입력
+- 허리둘레처럼 사용자가 모를 수 있는 항목은 비워도 분석 가능
 - 공공데이터포털 건강검진정보 샘플을 입력폼으로 변환
+- 익명 브라우저 ID 기반 이전 분석 기록 저장 및 변화 비교
+- Firebase 기반 이메일/비밀번호 계정, 개인 기본정보, 이전 진료기록 저장
 - 최근 7일 평균 걸음수 직접 입력
 - 생활패턴 입력
-- 개인정보 보호형 시연: 입력값은 영구 저장하지 않음
+- 개인정보 보호형 시연: 이름·연락처 없이 익명 분석 기록만 저장
 - 고혈압, 당뇨, 이상지질혈증 위험도 산출
 - 공복혈당, 혈압, 지질, BMI, 허리둘레, 활동량 등 주요 위험 요인 설명
 - 하루 1~2개의 무리 없는 개선 행동 추천
@@ -81,7 +88,7 @@ PowerShell에서 `.env`가 BOM 포함 UTF-8로 저장되어도 앱은 `utf-8-sig
 2. 설명 AI: 공복혈당, 혈압, BMI, 걸음수 등 위험도를 높인 요인을 쉬운 말로 설명합니다.
 3. 퍼스널 플랜 생성 AI: 사용자의 생활패턴과 제약을 반영해 하루 1~2개의 실천 가능한 행동으로 변환합니다.
 
-현재 MVP는 설명 가능한 규칙 기반 AI 엔진으로 동작하며, 공공데이터 기반 RandomForest/LogisticRegression 학습 파이프라인으로 확장할 수 있습니다.
+현재 MVP는 설명 가능한 규칙 기반 AI 엔진으로 안정적으로 동작합니다. `models/risk_models_3000.joblib`에는 공공데이터 샘플 3,000건 기반으로 학습한 당뇨·고혈압 모델이 있으며, `RISK_MODEL_PATH`를 해당 파일로 지정하면 `RISK_MODEL_MODE=auto`에서 학습 모델을 우선 사용합니다.
 
 ## 로드맵
 

@@ -66,6 +66,40 @@ def model_status() -> dict[str, Any]:
     }
 
 
+def model_performance_summary() -> dict[str, Any]:
+    bundle = load_model_bundle()
+    targets: dict[str, dict[str, Any]] = {}
+    for target, (risk_key, label, _) in MODEL_TARGETS.items():
+        report = bundle["reports"].get(target, {})
+        class_counts = report.get("class_counts", {}) or {}
+        positive = int(class_counts.get("1", 0))
+        negative = int(class_counts.get("0", 0))
+        rows = int(report.get("rows") or positive + negative)
+        prevalence = round((positive / rows) * 100, 1) if rows else None
+        targets[risk_key] = {
+            "target": target,
+            "label": label,
+            "status": report.get("status", "missing"),
+            "rows": rows,
+            "positive_count": positive,
+            "negative_count": negative,
+            "training_positive_rate": prevalence,
+            "roc_auc": _round_metric(report.get("roc_auc")),
+            "precision": _round_metric((report.get("1") or {}).get("precision")),
+            "recall": _round_metric((report.get("1") or {}).get("recall")),
+            "note": report.get("reason"),
+        }
+    return {
+        "status": bundle["status"],
+        "path": bundle["path"],
+        "targets": targets,
+        "caution": (
+            "성능지표는 건강검진 기준값으로 만든 위험군 라벨 기준입니다. "
+            "의료 진단 정확도가 아니라 공공데이터 기반 위험군 분류 참고 지표입니다."
+        ),
+    }
+
+
 def should_use_model() -> bool:
     settings = get_settings()
     mode = settings.risk_model_mode.lower()
@@ -74,6 +108,15 @@ def should_use_model() -> bool:
     if mode in {"model", "trained"}:
         return True
     return load_model_bundle()["status"] == "loaded"
+
+
+def _round_metric(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        return round(float(value), 3)
+    except (TypeError, ValueError):
+        return None
 
 
 def predict_with_model(

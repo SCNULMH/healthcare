@@ -214,6 +214,50 @@ button {
   line-height: 1.5;
 }
 
+.history-card {
+  margin: -10px 0 22px;
+  border: 1px solid #dbeafe;
+  border-radius: 22px;
+  background: #eff6ff;
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.history-card strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #1d4ed8;
+  font-size: 14px;
+}
+
+.history-card p {
+  margin: 0;
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.history-mini-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.history-mini-list span {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 14px;
+  background: white;
+  padding: 9px 10px;
+  color: #475569;
+  font-size: 12px;
+}
+
+.history-mini-list b {
+  color: #0f172a;
+}
+
 .spark-bars {
   position: absolute;
   right: 24px;
@@ -237,7 +281,8 @@ button {
 .input-card,
 .activity-card,
 .upload-choice,
-.result-section {
+.result-section,
+.account-card {
   margin-bottom: 16px;
 }
 
@@ -353,6 +398,7 @@ select:focus {
 .card-grid > label,
 .input-card,
 .activity-card,
+.account-card,
 .empty-result,
 .result-card,
 .action-card,
@@ -362,6 +408,17 @@ select:focus {
   background: white;
   padding: 16px;
   box-shadow: var(--shadow);
+}
+
+.account-card {
+  display: grid;
+  gap: 12px;
+}
+
+.account-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .bottom-cta {
@@ -720,10 +777,61 @@ select:focus {
   font-weight: 800;
 }
 
+.change-note,
+.change-panel {
+  margin-top: 12px;
+  border-radius: 18px;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.change-note {
+  background: rgba(100, 116, 139, 0.1);
+  color: #334155 !important;
+  font-weight: 800;
+}
+
+.change-panel {
+  border: 1px solid #dbeafe;
+  background: white;
+  text-align: left;
+}
+
+.change-panel strong,
+.change-panel span {
+  display: block;
+  font-weight: 900;
+}
+
+.change-panel p {
+  margin: 5px 0 !important;
+  font-size: 13px;
+}
+
+.change-panel.good {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.change-panel.good strong {
+  color: #15803d;
+}
+
+.change-panel.bad {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.change-panel.bad strong {
+  color: #dc2626;
+}
+
 .risk-list,
 .action-list,
 .weekly-list,
-.ai-step-list {
+.ai-step-list,
+.reliability-list {
   display: grid;
   gap: 12px;
   margin-top: 16px;
@@ -773,6 +881,54 @@ select:focus {
 
 .result-card h3 {
   margin: 0 0 4px;
+}
+
+.reliability-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  background: white;
+  padding: 16px;
+}
+
+.reliability-card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #f1f5f9;
+  border-radius: 18px;
+  background: #f8fafc;
+  padding: 14px;
+}
+
+.reliability-card h3,
+.reliability-card p {
+  margin: 0;
+}
+
+.reliability-card p,
+.reliability-card span,
+.reliability-card em {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.reliability-card span,
+.reliability-card em {
+  display: block;
+}
+
+.reliability-card em {
+  border-radius: 999px;
+  background: #e0f2fe;
+  padding: 7px 10px;
+  color: #0369a1;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.reliability-caution {
+  margin: 12px 0 0;
+  font-size: 12px;
 }
 
 .risk-card-top {

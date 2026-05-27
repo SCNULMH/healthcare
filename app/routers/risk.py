@@ -11,7 +11,8 @@ from app.services.diagnosis import (
     create_personal_plan,
     evaluate_health_risks,
 )
-from app.services.model_runtime import model_status, predict_with_model, should_use_model
+from app.services.model_runtime import model_performance_summary, model_status, predict_with_model, should_use_model
+from app.services.history import get_history, save_analysis
 from app.services.ocr_runtime import (
     OcrRuntimeError,
     demo_ocr_result,
@@ -28,7 +29,7 @@ class HealthProfileIn(BaseModel):
     sex: Literal["male", "female"]
     height_cm: float = Field(gt=120, lt=230)
     weight_kg: float = Field(gt=30, lt=200)
-    waist_cm: float = Field(gt=40, lt=160)
+    waist_cm: float | None = Field(default=None, gt=40, lt=160)
     systolic_bp: int = Field(ge=70, le=240)
     diastolic_bp: int = Field(ge=40, le=160)
     fasting_glucose: int = Field(ge=50, le=400)
@@ -53,6 +54,7 @@ class LifestyleProfileIn(BaseModel):
 
 
 class RiskRequest(BaseModel):
+    client_id: str | None = Field(default=None, min_length=8, max_length=80)
     health: HealthProfileIn
     lifestyle: LifestyleProfileIn
 
@@ -84,6 +86,11 @@ async def get_metadata() -> dict:
     }
 
 
+@router.get("/history/{client_id}")
+async def read_history(client_id: str, limit: int = 5) -> dict:
+    return get_history(client_id, limit=max(1, min(limit, 10)))
+
+
 def _ai_explanation() -> dict:
     return {
         "title": "AI가 이렇게 판단했어요",
@@ -108,6 +115,53 @@ def _ai_explanation() -> dict:
     }
 
 
+def _input_notes(health: HealthProfile) -> list[str]:
+    notes = []
+    if health.waist_cm is None:
+        notes.append(
+            "허리둘레가 입력되지 않아 복부비만 직접 판정은 제외하고 BMI, 혈압, 혈당, 지질 수치와 생활패턴 중심으로 분석했습니다."
+        )
+    return notes
+
+
+def _reliability_summary(
+    health: HealthProfile,
+    risk_dicts: list[dict],
+    engine: dict,
+) -> dict:
+    performance = model_performance_summary()
+    optional_missing = 1 if health.waist_cm is None else 0
+    required_count = 23
+    completeness = round(((required_count - optional_missing) / required_count) * 100)
+    cards = []
+    for risk in risk_dicts:
+        perf = performance["targets"].get(risk["key"], {})
+        avg = perf.get("training_positive_rate")
+        diff = None if avg is None else round(risk["probability"] - avg, 1)
+        cards.append(
+            {
+                "key": risk["key"],
+                "label": risk["label"],
+                "user_probability": risk["probability"],
+                "training_positive_rate": avg,
+                "difference_from_training_rate": diff,
+                "model_status": perf.get("status", "rule"),
+                "roc_auc": perf.get("roc_auc"),
+                "precision": perf.get("precision"),
+                "recall": perf.get("recall"),
+                "rows": perf.get("rows", 0),
+                "note": perf.get("note"),
+            }
+        )
+    return {
+        "input_completeness": completeness,
+        "engine_mode": engine.get("mode", "rule"),
+        "model_status": performance["status"],
+        "cards": cards,
+        "caution": performance["caution"],
+    }
+
+
 @router.post("/predict")
 async def predict_risk(payload: RiskRequest) -> dict:
     health = HealthProfile(**payload.health.model_dump())
@@ -124,13 +178,26 @@ async def predict_risk(payload: RiskRequest) -> dict:
         except RuntimeError as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
     plan = create_personal_plan(health, lifestyle, risks)
+    bmi = round(health.bmi, 1)
+    risk_dicts = [risk.to_dict() for risk in risks]
+    comparison = save_analysis(
+        client_id=payload.client_id,
+        bmi=bmi,
+        risks=risk_dicts,
+        plan=plan,
+        health=payload.health.model_dump(),
+        lifestyle=payload.lifestyle.model_dump(),
+    )
     return {
         "disclaimer": "예측 결과는 진단이 아니며, 정확한 판단과 치료는 의료진 상담이 필요합니다.",
-        "bmi": round(health.bmi, 1),
-        "risks": [risk.to_dict() for risk in risks],
+        "bmi": bmi,
+        "risks": risk_dicts,
         "plan": plan,
         "ai_explanation": _ai_explanation(),
         "engine": engine,
+        "input_notes": _input_notes(health),
+        "comparison": comparison,
+        "reliability": _reliability_summary(health, risk_dicts, engine),
     }
 
 

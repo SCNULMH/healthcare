@@ -9,9 +9,22 @@ const publicSampleStatus = document.querySelector("#public-sample-status");
 const ocrDemo = document.querySelector("#ocr-demo");
 const ocrStatus = document.querySelector("#ocr-status");
 const ocrFile = document.querySelector("#ocr-file");
+const accountStatus = document.querySelector("#account-status");
+const accountEmail = document.querySelector("#account-email");
+const accountPassword = document.querySelector("#account-password");
+const accountRegister = document.querySelector("#account-register");
+const accountLogin = document.querySelector("#account-login");
+const profileName = document.querySelector("#profile-name");
+const profileBirthYear = document.querySelector("#profile-birth-year");
+const profileMedicalNote = document.querySelector("#profile-medical-note");
+const profileSave = document.querySelector("#profile-save");
+const recordMemo = document.querySelector("#record-memo");
+const recordSave = document.querySelector("#record-save");
 
 const screenOrder = ["home", "basic", "checkup", "activity", "lifestyle", "ocr", "result"];
 let currentScreen = "home";
+let currentUser = getStoredUser();
+let activeClientId = currentUser?.user_id || getClientId();
 
 const healthFields = [
   "age",
@@ -27,6 +40,8 @@ const healthFields = [
   "ldl",
   "triglyceride",
 ];
+
+const optionalNumericFields = new Set(["waist_cm"]);
 
 const lifestyleFields = [
   "breakfast",
@@ -72,13 +87,29 @@ function goBack() {
   }
 }
 
+function getClientId() {
+  const key = "resetCoachClientId";
+  const existing = localStorage.getItem(key);
+  if (existing) return existing;
+  const next = `rc-${globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : Date.now().toString(36)}`;
+  localStorage.setItem(key, next);
+  return next;
+}
+
 function readPayload() {
   const data = new FormData(form);
   const health = {};
   const lifestyle = {};
 
   for (const field of healthFields) {
-    health[field] = field === "sex" ? data.get(field) : Number(data.get(field));
+    const value = data.get(field);
+    if (field === "sex") {
+      health[field] = value;
+    } else if (optionalNumericFields.has(field) && String(value).trim() === "") {
+      health[field] = null;
+    } else {
+      health[field] = Number(value);
+    }
   }
 
   for (const field of lifestyleFields) {
@@ -91,7 +122,7 @@ function readPayload() {
     }
   }
 
-  return { health, lifestyle };
+  return { client_id: activeClientId, health, lifestyle };
 }
 
 function fillForm(payload) {
@@ -131,6 +162,9 @@ function renderLoading() {
 function render(data) {
   const primaryRisk = [...data.risks].sort((a, b) => b.probability - a.probability)[0];
   const aiSteps = data.ai_explanation?.steps || [];
+  const inputNotes = (data.input_notes || []).map((note) => `<p class="engine-note">${note}</p>`).join("");
+  const comparison = renderComparison(data.comparison);
+  const reliability = renderReliability(data.reliability);
 
   const risks = data.risks
     .map(
@@ -194,6 +228,8 @@ function render(data) {
         <h2>${primaryRisk.label} 가능성이 가장 크게 예측되었습니다.</h2>
         <p>${primaryRisk.summary} BMI ${data.bmi}와 검진 수치, 생활패턴을 함께 반영했습니다.</p>
         <p class="engine-note">예측 엔진: ${data.engine?.mode || "rule"} · ${data.engine?.message || "설명 가능한 규칙 기반 AI 엔진을 사용했습니다."}</p>
+        ${inputNotes}
+        ${comparison}
       </div>
     </div>
 
@@ -213,6 +249,8 @@ function render(data) {
       <div class="risk-list">${risks}</div>
     </section>
 
+    ${reliability}
+
     <section class="result-section">
       <div class="screen-heading">
         <h2>AI 개인화 추천</h2>
@@ -229,7 +267,217 @@ function render(data) {
       <div class="weekly-list">${goals}</div>
     </section>
   `;
+  refreshHistory();
   goToScreen("result");
+}
+
+function renderReliability(reliability) {
+  if (!reliability) return "";
+  const cards = (reliability.cards || [])
+    .map((item) => {
+      const avg = item.training_positive_rate == null ? "기준 없음" : `${item.training_positive_rate}%`;
+      const diff = item.difference_from_training_rate == null
+        ? ""
+        : `사용자 결과가 학습 데이터 위험군 비율보다 ${item.difference_from_training_rate > 0 ? "+" : ""}${item.difference_from_training_rate}%p`;
+      const metrics = item.roc_auc == null
+        ? "규칙 기반 또는 학습 제외"
+        : `ROC-AUC ${item.roc_auc} · 재현율 ${item.recall ?? "-"} · 정밀도 ${item.precision ?? "-"}`;
+      return `
+        <article class="reliability-card">
+          <div>
+            <h3>${item.label}</h3>
+            <p>내 결과 ${item.user_probability}% · 학습 평균 ${avg}</p>
+            <span>${diff}</span>
+          </div>
+          <em>${metrics}</em>
+        </article>
+      `;
+    })
+    .join("");
+  return `
+    <section class="result-section reliability-section">
+      <div class="screen-heading">
+        <h2>신뢰도와 평균 비교</h2>
+        <p>입력값 완성도 ${reliability.input_completeness}% · 예측 엔진 ${reliability.engine_mode}</p>
+      </div>
+      <div class="reliability-list">${cards}</div>
+      <p class="muted reliability-caution">${reliability.caution}</p>
+    </section>
+  `;
+}
+
+function renderComparison(comparison) {
+  if (!comparison) return "";
+  if (comparison.status === "first_record") {
+    return `<p class="change-note neutral">${comparison.message}</p>`;
+  }
+  const delta = comparison.risk_delta;
+  const className = delta < 0 ? "good" : delta > 0 ? "bad" : "neutral";
+  const deltaText = delta === 0 ? "변화 없음" : `${delta > 0 ? "+" : ""}${delta}%p`;
+  return `
+    <div class="change-panel ${className}">
+      <strong>이전 분석 대비 ${deltaText}</strong>
+      <p>${comparison.message}</p>
+      <span>BMI 변화 ${comparison.bmi_delta > 0 ? "+" : ""}${comparison.bmi_delta}</span>
+    </div>
+  `;
+}
+
+async function refreshHistory() {
+  const homeScore = document.querySelector("#home-score");
+  const homeScoreLabel = document.querySelector("#home-score-label");
+  const homeScoreSummary = document.querySelector("#home-score-summary");
+  const historySummary = document.querySelector("#history-summary");
+  if (!historySummary) return;
+  try {
+    const response = await fetch(`/risk/history/${encodeURIComponent(activeClientId)}?limit=5`);
+    if (!response.ok) throw new Error("이전 분석 기록을 불러오지 못했습니다.");
+    const data = await response.json();
+    const latest = data.items?.[0];
+    if (!latest) {
+      homeScore.textContent = "--";
+      homeScoreLabel.textContent = "오늘의 건강 리셋 점수";
+      homeScoreSummary.textContent = "검진 수치와 생활패턴을 함께 분석합니다.";
+      historySummary.innerHTML = `
+        <strong>이전 분석 기록</strong>
+        <p>아직 저장된 분석 결과가 없습니다. 첫 분석 후 변화 추이를 확인할 수 있습니다.</p>
+      `;
+      return;
+    }
+    const resetScore = Math.max(5, 100 - latest.primary_risk_probability);
+    const summary = data.summary || {};
+    const riskDelta = summary.risk_delta_from_oldest || 0;
+    const deltaText = data.items.length > 1
+      ? `첫 기록 대비 주요 위험도 ${riskDelta > 0 ? "+" : ""}${riskDelta}%p`
+      : "다음 분석부터 변화 비교";
+    homeScore.textContent = resetScore;
+    homeScoreLabel.textContent = "최근 건강 리셋 점수";
+    homeScoreSummary.textContent = `${latest.primary_risk_label} ${latest.primary_risk_probability}% 기준입니다.`;
+    historySummary.innerHTML = `
+      <strong>이전 값 변화</strong>
+      <p>${deltaText}</p>
+      <div class="history-mini-list">
+        ${data.items
+          .slice(0, 3)
+          .map(
+            (item) => `
+              <span>
+                <b>${item.primary_risk_probability}%</b>
+                ${item.primary_risk_label}
+              </span>
+            `,
+          )
+          .join("")}
+      </div>
+    `;
+  } catch (error) {
+    historySummary.innerHTML = `<strong>이전 분석 기록</strong><p>${error.message}</p>`;
+  }
+}
+
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("resetCoachUser") || "null");
+  } catch {
+    return null;
+  }
+}
+
+function setCurrentUser(user) {
+  currentUser = user;
+  activeClientId = user?.user_id || getClientId();
+  if (user) {
+    localStorage.setItem("resetCoachUser", JSON.stringify(user));
+    accountStatus.textContent = `${user.email} 계정으로 로그인했습니다.`;
+    fillAccountProfile(user.profile || {});
+  } else {
+    localStorage.removeItem("resetCoachUser");
+    accountStatus.textContent = "로그인하면 분석 결과와 이전 진료기록을 Firebase에 저장합니다.";
+  }
+  refreshHistory();
+}
+
+function fillAccountProfile(profile) {
+  profileName.value = profile.name || "";
+  profileBirthYear.value = profile.birth_year || "";
+  const notes = [profile.conditions, profile.medications, profile.allergies].filter(Boolean).join(" / ");
+  profileMedicalNote.value = notes;
+}
+
+async function accountRequest(path, body, method = "POST") {
+  const response = await fetch(path, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.detail || "계정 처리에 실패했습니다.");
+  return data;
+}
+
+async function registerAccount() {
+  try {
+    const data = await accountRequest("/account/register", {
+      email: accountEmail.value,
+      password: accountPassword.value,
+      profile: buildProfilePayload(),
+    });
+    setCurrentUser(data.user);
+  } catch (error) {
+    accountStatus.textContent = error.message;
+  }
+}
+
+async function loginAccount() {
+  try {
+    const data = await accountRequest("/account/login", {
+      email: accountEmail.value,
+      password: accountPassword.value,
+    });
+    setCurrentUser(data.user);
+  } catch (error) {
+    accountStatus.textContent = error.message;
+  }
+}
+
+function buildProfilePayload() {
+  const medicalNote = profileMedicalNote.value.trim();
+  return {
+    name: profileName.value.trim() || null,
+    birth_year: profileBirthYear.value ? Number(profileBirthYear.value) : null,
+    conditions: medicalNote || null,
+    medications: medicalNote || null,
+  };
+}
+
+async function saveProfile() {
+  if (!currentUser) {
+    accountStatus.textContent = "먼저 가입 또는 로그인해 주세요.";
+    return;
+  }
+  try {
+    const data = await accountRequest(`/account/profile/${currentUser.user_id}`, buildProfilePayload(), "PUT");
+    setCurrentUser(data.user);
+    accountStatus.textContent = "개인정보를 저장했습니다.";
+  } catch (error) {
+    accountStatus.textContent = error.message;
+  }
+}
+
+async function saveMedicalRecord() {
+  if (!currentUser) {
+    accountStatus.textContent = "먼저 가입 또는 로그인해 주세요.";
+    return;
+  }
+  try {
+    await accountRequest(`/account/medical-records/${currentUser.user_id}`, {
+      memo: recordMemo.value.trim(),
+    });
+    recordMemo.value = "";
+    accountStatus.textContent = "이전 진료기록을 저장했습니다.";
+  } catch (error) {
+    accountStatus.textContent = error.message;
+  }
 }
 
 navButtons.forEach((button) => {
@@ -310,6 +558,11 @@ ocrDemo.addEventListener("click", async () => {
   }
 });
 
+accountRegister.addEventListener("click", registerAccount);
+accountLogin.addEventListener("click", loginAccount);
+profileSave.addEventListener("click", saveProfile);
+recordSave.addEventListener("click", saveMedicalRecord);
+
 document.addEventListener("click", (event) => {
   const dynamicTarget = event.target.closest("[data-screen-target]");
   if (dynamicTarget) {
@@ -317,4 +570,6 @@ document.addEventListener("click", (event) => {
   }
 });
 
+refreshHistory();
+if (currentUser) setCurrentUser(currentUser);
 goToScreen("home");

@@ -12,3 +12,5 @@ data/
 디자인템플릿/
 *.pdf
 *.hwp
+*firebase-adminsdk*.json
+firebase-service-account.json

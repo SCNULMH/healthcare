@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     checkup_group_dataset_path: str = "/15144521/v1/uddi:281e8b27-402b-48db-85d9-d5410a73ce07"
     use_demo_data: bool = True
     request_timeout_seconds: float = 8.0
+    database_backend: str = "sqlite"
+    database_path: str = "data/reset_coach.sqlite3"
+    firebase_credentials_path: str | None = None
+    firebase_project_id: str | None = None
+    firebase_web_app_id: str | None = None
     risk_model_mode: str = "auto"
     risk_model_path: str = "models/risk_models.joblib"
     ocr_provider: str = "demo"

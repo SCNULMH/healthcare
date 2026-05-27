@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from app.routers.health import router as health_router
 from app.routers.public_data import router as public_data_router
 from app.routers.risk import router as risk_router
+from app.routers.account import router as account_router
 
 
 app = FastAPI(
@@ -16,6 +17,7 @@ app = FastAPI(
 app.include_router(health_router)
 app.include_router(public_data_router)
 app.include_router(risk_router)
+app.include_router(account_router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 

@@ -21,10 +21,20 @@ services:
         value: "false"
       - key: REQUEST_TIMEOUT_SECONDS
         value: "8"
+      - key: DATABASE_BACKEND
+        value: firebase
+      - key: DATABASE_PATH
+        value: data/reset_coach.sqlite3
+      - key: FIREBASE_CREDENTIALS_PATH
+        value: /etc/secrets/firebase-service-account.json
+      - key: FIREBASE_PROJECT_ID
+        value: checkup-70a1e
+      - key: FIREBASE_WEB_APP_ID
+        value: 1:605150906055:web:6021dd1c404c7739cde0e2
       - key: RISK_MODEL_MODE
         value: auto
       - key: RISK_MODEL_PATH
-        value: models/risk_models.joblib
+        value: models/risk_models_3000.joblib
       - key: OCR_PROVIDER
         value: demo
       - key: OCR_FALLBACK_TO_DEMO
