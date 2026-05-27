@@ -429,6 +429,34 @@ button {
   font-size: 14px;
 }
 
+.checkup-heading {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.unknown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.unknown-toggle input {
+  width: 15px;
+  min-height: 15px;
+  accent-color: var(--brand);
+}
+
 .card-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -490,6 +518,14 @@ select:focus {
 .account-card {
   display: grid;
   gap: 12px;
+}
+
+.muted-card {
+  opacity: 0.66;
+}
+
+.muted-card input {
+  background: #e5e7eb;
 }
 
 .account-auth-form {
@@ -942,6 +978,28 @@ body.logged-in #account-auth-actions {
 
 .change-panel.bad strong {
   color: #dc2626;
+}
+
+.benchmark-summary {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  border: 1px solid #bbf7d0;
+  border-radius: 16px;
+  background: #f0fdf4;
+  padding: 12px;
+  text-align: left;
+}
+
+.benchmark-summary strong {
+  color: #15803d;
+  font-size: 13px;
+}
+
+.benchmark-summary p {
+  margin: 0 !important;
+  color: #166534 !important;
+  font-size: 12px;
 }
 
 .save-analysis-button {

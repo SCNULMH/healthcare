@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>검진AI 리셋코치</title>
-    <link rel="stylesheet" href="/static/styles.css?v=260527-tabs2" />
+    <link rel="stylesheet" href="/static/styles.css?v=260527-unknown1" />
   </head>
   <body>
     <div class="app-shell">
@@ -105,32 +105,35 @@
               <div class="progress-lines"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div>
             </div>
 
-            <div class="screen-heading">
-              <h2>최근 검진 수치를 입력해 주세요</h2>
-              <p>공복혈당, 혈압, 지질 수치가 위험예측의 핵심 입력값입니다.</p>
+            <div class="screen-heading checkup-heading">
+              <div>
+                <h2>최근 검진 수치를 입력해 주세요</h2>
+                <p>공복혈당, 혈압, 지질 수치가 위험예측의 핵심 입력값입니다.</p>
+              </div>
+              <label class="unknown-toggle"><input name="lipid_unknown" type="checkbox" /> 정확하게 모름</label>
             </div>
 
             <article class="input-card">
-              <div class="card-title"><span class="icon-chip red">♥</span><strong>혈압</strong></div>
+              <div class="card-title"><span class="icon-chip red">🩺</span><strong>혈압</strong></div>
               <div class="split-inputs">
-                <label>수축기 <input name="systolic_bp" type="number" value="132" /><span class="avg-hint">40대 참고 평균 120~130mmHg · 130 이상 주의</span></label>
+                <label>수축기 <input name="systolic_bp" type="number" value="132" /><span class="avg-hint" data-benchmark="systolic">40대 평균 120~130mmHg</span></label>
                 <span>/</span>
-                <label>이완기 <input name="diastolic_bp" type="number" value="86" /><span class="avg-hint">40대 참고 평균 75~85mmHg · 80 이상 주의</span></label>
+                <label>이완기 <input name="diastolic_bp" type="number" value="86" /><span class="avg-hint" data-benchmark="diastolic">40대 평균 75~85mmHg</span></label>
               </div>
             </article>
 
             <article class="input-card">
-              <div class="card-title"><span class="icon-chip blue">●</span><strong>혈당</strong></div>
-              <label>공복혈당 <input name="fasting_glucose" type="number" value="132" /><span class="avg-hint">평균 90~100mg/dL · 100 이상 주의, 126 이상 위험</span></label>
+              <div class="card-title"><span class="icon-chip blue">🩸</span><strong>혈당</strong></div>
+              <label>공복혈당 <input name="fasting_glucose" type="number" value="132" /><span class="avg-hint" data-benchmark="glucose">40대 평균 90~100mg/dL</span></label>
             </article>
 
-            <article class="input-card">
-              <div class="card-title"><span class="icon-chip yellow">≋</span><strong>지질 수치</strong></div>
+            <article class="input-card" id="lipid-card">
+              <div class="card-title"><span class="icon-chip yellow">🧪</span><strong>지질 수치</strong></div>
               <div class="card-grid compact">
-                <label>총콜레스테롤 <input name="total_cholesterol" type="number" value="218" /><span class="avg-hint">평균 190~210mg/dL · 200 이상 주의</span></label>
-                <label>HDL <input name="hdl" type="number" value="42" /><span class="avg-hint">평균 45~60mg/dL · 낮을수록 위험</span></label>
-                <label>LDL <input name="ldl" type="number" value="138" /><span class="avg-hint">평균 110~130mg/dL · 130 이상 주의</span></label>
-                <label>중성지방 <input name="triglyceride" type="number" value="185" /><span class="avg-hint">평균 100~150mg/dL · 150 이상 주의</span></label>
+                <label>총콜레스테롤 <input name="total_cholesterol" type="number" value="218" /><span class="avg-hint" data-benchmark="total_cholesterol">40대 평균 190~210mg/dL</span></label>
+                <label>HDL <input name="hdl" type="number" value="42" /><span class="avg-hint" data-benchmark="hdl">40대 평균 45~60mg/dL</span></label>
+                <label>LDL <input name="ldl" type="number" value="138" /><span class="avg-hint" data-benchmark="ldl">40대 평균 110~130mg/dL</span></label>
+                <label>중성지방 <input name="triglyceride" type="number" value="185" /><span class="avg-hint" data-benchmark="triglyceride">40대 평균 100~150mg/dL</span></label>
               </div>
             </article>
 
@@ -150,15 +153,15 @@
 
             <article class="activity-card">
               <span class="activity-icon">👟</span>
-              <label>최근 7일 평균 걸음수 <input name="avg_steps" type="number" value="4300" /><span class="avg-hint">40대 참고 평균 하루 6,000~7,000보</span></label>
+              <label>최근 7일 평균 걸음수 <input name="avg_steps" type="number" value="4300" /></label>
             </article>
             <article class="activity-card">
               <span class="activity-icon">💪</span>
-              <label>주간 운동 횟수 <input name="exercise_per_week" type="number" value="1" /><span class="avg-hint">40대 참고 평균 주 2~3회</span></label>
+              <label>주간 운동 횟수 <input name="exercise_per_week" type="number" value="1" /></label>
             </article>
             <article class="activity-card">
               <span class="activity-icon">⏱️</span>
-              <label>하루 가능 시간(분) <input name="available_minutes_per_day" type="number" value="15" /><span class="avg-hint">권장 시작점 하루 20~30분</span></label>
+              <label>하루 가능 시간(분) <input name="available_minutes_per_day" type="number" value="15" /></label>
             </article>
 
             <button class="primary wide bottom-cta" type="button" data-screen-target="lifestyle">다음: 생활패턴</button>
@@ -236,6 +239,13 @@
               <div class="card-grid compact">
                 <label>이름 <input id="profile-name" type="text" placeholder="선택" /></label>
                 <label>출생연도 <input id="profile-birth-year" type="number" placeholder="예: 1985" /></label>
+                <label>성별
+                  <select id="profile-sex">
+                    <option value="">선택 안 함</option>
+                    <option value="male">남성</option>
+                    <option value="female">여성</option>
+                  </select>
+                </label>
               </div>
               <label>질환/복용약/알레르기 <input id="profile-medical-note" type="text" placeholder="예: 고혈압약 복용, 페니실린 알레르기" /></label>
               <button id="profile-save" class="ghost wide" type="button">개인정보 저장</button>
@@ -300,6 +310,6 @@
       </form>
     </div>
 
-    <script src="/static/app.js?v=260527-tabs2"></script>
+    <script src="/static/app.js?v=260527-unknown1"></script>
   </body>
 </html>

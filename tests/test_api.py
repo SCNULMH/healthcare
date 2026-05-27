@@ -85,6 +85,26 @@ class RiskApiTests(unittest.TestCase):
         self.assertIn("impact_summary", payload["plan"])
         self.assertIn("cards", payload["reliability"])
 
+    def test_prediction_accepts_unknown_lipid_values(self):
+        demo = self.client.get("/risk/demo").json()
+        demo["health"].update(
+            {
+                "total_cholesterol": None,
+                "hdl": None,
+                "ldl": None,
+                "triglyceride": None,
+                "lipid_unknown": True,
+            }
+        )
+
+        response = self.client.post("/risk/predict", json=demo)
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("지질 수치", " ".join(payload["input_notes"]))
+        dyslipidemia = next(item for item in payload["risks"] if item["key"] == "dyslipidemia")
+        self.assertTrue(any("직접 수치 판단" in reason for reason in dyslipidemia["reasons"]))
+
     def test_save_result_stores_anonymous_history_and_compares(self):
         demo = self.client.get("/risk/demo").json()
         demo["client_id"] = "test-client-history"

@@ -18,12 +18,15 @@ const accountAuthForm = document.querySelector("#account-auth-form");
 const accountAuthActions = document.querySelector("#account-auth-actions");
 const profileName = document.querySelector("#profile-name");
 const profileBirthYear = document.querySelector("#profile-birth-year");
+const profileSex = document.querySelector("#profile-sex");
 const profileMedicalNote = document.querySelector("#profile-medical-note");
 const profileSave = document.querySelector("#profile-save");
 const recordMemo = document.querySelector("#record-memo");
 const recordSave = document.querySelector("#record-save");
 const scoreHelpToggle = document.querySelector("#score-help-toggle");
 const scoreHelpPanel = document.querySelector("#score-help-panel");
+const lipidUnknown = document.querySelector("[name='lipid_unknown']");
+const lipidCard = document.querySelector("#lipid-card");
 
 const screenOrder = ["home", "account", "basic", "checkup", "activity", "lifestyle", "result"];
 let currentScreen = "home";
@@ -48,6 +51,7 @@ const healthFields = [
 ];
 
 const optionalNumericFields = new Set(["waist_cm"]);
+const lipidFields = new Set(["total_cholesterol", "hdl", "ldl", "triglyceride"]);
 
 const lifestyleFields = [
   "breakfast",
@@ -106,17 +110,21 @@ function readPayload() {
   const data = new FormData(form);
   const health = {};
   const lifestyle = {};
+  const isLipidUnknown = data.get("lipid_unknown") === "on";
 
   for (const field of healthFields) {
     const value = data.get(field);
     if (field === "sex") {
       health[field] = value;
+    } else if (isLipidUnknown && lipidFields.has(field)) {
+      health[field] = null;
     } else if (optionalNumericFields.has(field) && String(value).trim() === "") {
       health[field] = null;
     } else {
       health[field] = Number(value);
     }
   }
+  health.lipid_unknown = isLipidUnknown;
 
   for (const field of lifestyleFields) {
     if (field === "can_prepare_meals") {
@@ -129,6 +137,59 @@ function readPayload() {
   }
 
   return { client_id: activeClientId, health, lifestyle };
+}
+
+function profileContext() {
+  const payload = readPayload();
+  const profile = currentUser?.profile || {};
+  const birthYear = Number(profile.birth_year || profileBirthYear.value || 0);
+  const age = birthYear ? new Date().getFullYear() - birthYear : payload.health.age;
+  const sex = profile.sex || profileSex?.value || payload.health.sex;
+  const decade = Math.max(20, Math.min(80, Math.floor(age / 10) * 10));
+  return { age, decade, sex, sexLabel: sex === "female" ? "여성" : "남성" };
+}
+
+const benchmarkTable = {
+  20: { systolic: "110~120mmHg", diastolic: "70~78mmHg", glucose: "85~95mg/dL", total_cholesterol: "170~190mg/dL", hdl: "50~65mg/dL", ldl: "90~115mg/dL", triglyceride: "80~120mg/dL" },
+  30: { systolic: "115~125mmHg", diastolic: "72~80mmHg", glucose: "88~98mg/dL", total_cholesterol: "180~200mg/dL", hdl: "48~62mg/dL", ldl: "100~125mg/dL", triglyceride: "90~135mg/dL" },
+  40: { systolic: "120~130mmHg", diastolic: "75~85mmHg", glucose: "90~100mg/dL", total_cholesterol: "190~210mg/dL", hdl: "45~60mg/dL", ldl: "110~130mg/dL", triglyceride: "100~150mg/dL" },
+  50: { systolic: "125~135mmHg", diastolic: "78~86mmHg", glucose: "92~105mg/dL", total_cholesterol: "195~215mg/dL", hdl: "43~58mg/dL", ldl: "115~135mg/dL", triglyceride: "110~160mg/dL" },
+  60: { systolic: "130~140mmHg", diastolic: "78~88mmHg", glucose: "95~110mg/dL", total_cholesterol: "190~215mg/dL", hdl: "42~57mg/dL", ldl: "110~135mg/dL", triglyceride: "110~165mg/dL" },
+  70: { systolic: "130~145mmHg", diastolic: "75~85mmHg", glucose: "95~112mg/dL", total_cholesterol: "185~210mg/dL", hdl: "40~55mg/dL", ldl: "105~130mg/dL", triglyceride: "105~160mg/dL" },
+  80: { systolic: "130~145mmHg", diastolic: "72~84mmHg", glucose: "95~112mg/dL", total_cholesterol: "180~205mg/dL", hdl: "40~55mg/dL", ldl: "100~125mg/dL", triglyceride: "100~155mg/dL" },
+};
+
+function updateBenchmarks() {
+  const context = profileContext();
+  const table = benchmarkTable[context.decade] || benchmarkTable[40];
+  document.querySelectorAll("[data-benchmark]").forEach((item) => {
+    const key = item.dataset.benchmark;
+    item.textContent = `${context.decade}대 ${context.sexLabel} 평균 ${table[key]}`;
+  });
+}
+
+function renderBenchmarkSummary() {
+  const context = profileContext();
+  const table = benchmarkTable[context.decade] || benchmarkTable[40];
+  const lipidText = readPayload().health.lipid_unknown
+    ? "지질 수치는 정확하게 모름으로 표시되어 결과에서 직접 수치 비교를 제외했습니다."
+    : `지질 평균: 총콜레스테롤 ${table.total_cholesterol}, LDL ${table.ldl}, 중성지방 ${table.triglyceride}`;
+  return `
+    <div class="benchmark-summary">
+      <strong>${context.decade}대 ${context.sexLabel} 평균 기준</strong>
+      <p>혈압 ${table.systolic}/${table.diastolic}, 공복혈당 ${table.glucose}</p>
+      <p>${lipidText}</p>
+    </div>
+  `;
+}
+
+function updateUnknownState() {
+  const unknown = Boolean(lipidUnknown?.checked);
+  lipidCard?.classList.toggle("muted-card", unknown);
+  lipidFields.forEach((field) => {
+    const input = form.elements[field];
+    if (input) input.disabled = unknown;
+  });
 }
 
 function fillForm(payload) {
@@ -262,6 +323,7 @@ function render(data) {
         <p>${primaryRisk.summary} BMI ${data.bmi}와 검진 수치, 생활패턴을 함께 반영했습니다.</p>
         <p class="engine-note">예측 엔진: ${data.engine?.mode || "rule"} · ${data.engine?.message || "설명 가능한 규칙 기반 AI 엔진을 사용했습니다."}</p>
         ${inputNotes}
+        ${renderBenchmarkSummary()}
         ${comparison}
         <button id="save-analysis" class="primary wide save-analysis-button" type="button">진단결과 저장</button>
         <p id="save-analysis-status" class="muted save-analysis-status">저장 버튼을 누를 때만 이전 기록에 반영됩니다.</p>
@@ -548,7 +610,9 @@ function setCurrentUser(user) {
 function fillAccountProfile(profile) {
   profileName.value = profile.name || "";
   profileBirthYear.value = profile.birth_year || "";
+  if (profileSex) profileSex.value = profile.sex || "";
   profileMedicalNote.value = profile.medical_note ? dedupeMedicalNote(profile.medical_note) : "";
+  updateBenchmarks();
 }
 
 async function accountRequest(path, body, method = "POST") {
@@ -602,6 +666,7 @@ function buildProfilePayload() {
   const payload = {};
   if (profileName.value.trim()) payload.name = profileName.value.trim();
   if (profileBirthYear.value) payload.birth_year = Number(profileBirthYear.value);
+  if (profileSex?.value) payload.sex = profileSex.value;
   if (medicalNote) payload.medical_note = dedupeMedicalNote(medicalNote);
   return payload;
 }
@@ -727,6 +792,11 @@ accountRegister.addEventListener("click", registerAccount);
 accountLogin.addEventListener("click", loginAccount);
 profileSave.addEventListener("click", saveProfile);
 recordSave.addEventListener("click", saveMedicalRecord);
+lipidUnknown?.addEventListener("change", updateUnknownState);
+form.elements.age?.addEventListener("input", updateBenchmarks);
+form.elements.sex?.addEventListener("change", updateBenchmarks);
+profileBirthYear?.addEventListener("input", updateBenchmarks);
+profileSex?.addEventListener("change", updateBenchmarks);
 scoreHelpToggle.addEventListener("click", () => {
   const nextHidden = !scoreHelpPanel.hidden ? true : false;
   scoreHelpPanel.hidden = nextHidden;
@@ -751,4 +821,6 @@ document.addEventListener("click", (event) => {
 
 refreshHistory();
 if (currentUser) setCurrentUser(currentUser);
+updateUnknownState();
+updateBenchmarks();
 goToScreen("home");

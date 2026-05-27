@@ -33,10 +33,11 @@ class HealthProfileIn(BaseModel):
     systolic_bp: int = Field(ge=70, le=240)
     diastolic_bp: int = Field(ge=40, le=160)
     fasting_glucose: int = Field(ge=50, le=400)
-    total_cholesterol: int = Field(ge=80, le=400)
-    hdl: int = Field(ge=10, le=150)
-    ldl: int = Field(ge=30, le=300)
-    triglyceride: int = Field(ge=30, le=800)
+    total_cholesterol: int | None = Field(default=None, ge=80, le=400)
+    hdl: int | None = Field(default=None, ge=10, le=150)
+    ldl: int | None = Field(default=None, ge=30, le=300)
+    triglyceride: int | None = Field(default=None, ge=30, le=800)
+    lipid_unknown: bool = False
 
 
 class LifestyleProfileIn(BaseModel):
@@ -147,6 +148,8 @@ def _input_notes(health: HealthProfile) -> list[str]:
         notes.append(
             "허리둘레가 입력되지 않아 복부비만 직접 판정은 제외하고 BMI, 혈압, 혈당, 지질 수치와 생활패턴 중심으로 분석했습니다."
         )
+    if health.lipid_unknown:
+        notes.append("지질 수치를 정확하게 모름으로 표시해 총콜레스테롤·HDL·LDL·중성지방 직접값은 제외하고 활동·생활 기준으로 반영했습니다.")
     return notes
 
 
@@ -157,6 +160,8 @@ def _reliability_summary(
 ) -> dict:
     performance = model_performance_summary()
     optional_missing = 1 if health.waist_cm is None else 0
+    if health.lipid_unknown:
+        optional_missing += 4
     required_count = 23
     completeness = round(((required_count - optional_missing) / required_count) * 100)
     cards = []
@@ -198,7 +203,13 @@ async def predict_risk(payload: RiskRequest) -> dict:
         "status": "used",
         "message": "설명 가능한 규칙 기반 AI 엔진을 사용했습니다.",
     }
-    if should_use_model():
+    if should_use_model() and health.lipid_unknown:
+        engine = {
+            "mode": "rule",
+            "status": "used_lipid_unknown",
+            "message": "지질 수치가 정확하지 않아 학습 모델 대신 설명 가능한 규칙 기반 엔진으로 분석했습니다.",
+        }
+    elif should_use_model():
         try:
             risks, engine = predict_with_model(health, lifestyle, risks)
         except RuntimeError as exc:

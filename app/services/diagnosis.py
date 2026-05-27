@@ -16,10 +16,11 @@ class HealthProfile:
     systolic_bp: int
     diastolic_bp: int
     fasting_glucose: int
-    total_cholesterol: int
-    hdl: int
-    ldl: int
-    triglyceride: int
+    total_cholesterol: int | None
+    hdl: int | None
+    ldl: int | None
+    triglyceride: int | None
+    lipid_unknown: bool = False
 
     @property
     def bmi(self) -> float:
@@ -175,6 +176,32 @@ def _dyslipidemia_risk(health: HealthProfile, lifestyle: LifestyleProfile) -> Ri
     score = 15
     reasons: list[str] = []
 
+    if health.lipid_unknown:
+        reasons.append("지질 수치를 정확하게 모름으로 표시해 직접 수치 판단은 제외했습니다.")
+        score += _bmi_score(health, reasons)
+        if lifestyle.eating_out_per_week >= 5:
+            score += 6
+            reasons.append("외식 빈도가 높아 지질 위험 추정에 반영했습니다.")
+        if lifestyle.late_meals_per_week >= 3:
+            score += 5
+            reasons.append("야식 빈도가 높아 지질 위험 추정에 반영했습니다.")
+        if lifestyle.exercise_per_week <= 1:
+            score += 5
+            reasons.append("운동 빈도가 낮아 활동 기준에 반영했습니다.")
+        if lifestyle.avg_steps < 5000:
+            score += 4
+            reasons.append("최근 걸음수가 낮아 활동 기준에 반영했습니다.")
+        probability = min(score, 95)
+        level = _level(probability)
+        return RiskResult(
+            key="dyslipidemia",
+            label="이상지질혈증 위험군",
+            level=level,
+            probability=probability,
+            reasons=reasons,
+            summary=_summary("이상지질혈증", level),
+        )
+
     lipid_flags = [
         health.total_cholesterol >= 240,
         health.ldl >= 160,
@@ -290,7 +317,9 @@ def _impact_summary(health: HealthProfile, lifestyle: LifestyleProfile, priority
         if lifestyle.eating_out_per_week >= 5:
             impacts.append({"factor": "외식", "current": f"주 {lifestyle.eating_out_per_week}회", "threshold": "주 5회 미만", "impact": "혈압 7점, 지질 6점 감소 가능"})
     if "dyslipidemia" in keys:
-        if health.triglyceride >= 150 or health.ldl >= 130 or health.total_cholesterol >= 200:
+        if health.lipid_unknown:
+            impacts.append({"factor": "지질 수치 미입력", "current": "정확하게 모름", "threshold": "검진표 확인 후 입력", "impact": "외식·야식·운동·걸음수 기준으로만 지질 위험을 추정했습니다."})
+        elif health.triglyceride >= 150 or health.ldl >= 130 or health.total_cholesterol >= 200:
             impacts.append({"factor": "지질 수치", "current": f"LDL {health.ldl}, 중성지방 {health.triglyceride}", "threshold": "LDL 130 미만, 중성지방 150 미만", "impact": "지질 위험도에서 가장 큰 기준값입니다."})
         if lifestyle.late_meals_per_week >= 3:
             impacts.append({"factor": "야식", "current": f"주 {lifestyle.late_meals_per_week}회", "threshold": "주 3회 미만", "impact": "지질 생활요인 5점 감소"})
