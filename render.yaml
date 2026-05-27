@@ -26,7 +26,9 @@ services:
       - key: DATABASE_PATH
         value: data/reset_coach.sqlite3
       - key: FIREBASE_CREDENTIALS_PATH
-        value: /etc/secrets/firebase-service-account.json
+        value: ""
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false
       - key: FIREBASE_PROJECT_ID
         value: checkup-70a1e
       - key: FIREBASE_WEB_APP_ID

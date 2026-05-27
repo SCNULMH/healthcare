@@ -63,7 +63,7 @@ PowerShell에서 `.env`가 BOM 포함 UTF-8로 저장되어도 앱은 `utf-8-sig
 
 분석 기록은 기본값 `DATABASE_BACKEND=sqlite`, `DATABASE_PATH=data/reset_coach.sqlite3`로 저장됩니다. 이름, 전화번호, 주민번호 같은 개인식별 정보는 저장하지 않고 브라우저별 익명 ID와 분석 수치만 저장합니다.
 
-Firebase를 사용할 때는 `DATABASE_BACKEND=firebase`, `FIREBASE_CREDENTIALS_PATH`, `FIREBASE_PROJECT_ID`를 설정합니다. 서비스 계정 JSON은 저장소에 올리지 않고 로컬 `.env` 또는 Render Secret File로만 연결합니다.
+Firebase를 사용할 때는 `DATABASE_BACKEND=firebase`, `FIREBASE_PROJECT_ID`를 설정합니다. Render에서는 `FIREBASE_CREDENTIALS_JSON` 환경변수 값에 서비스 계정 JSON 전체를 넣거나, Secret File을 쓸 경우 `FIREBASE_CREDENTIALS_PATH`로 파일 경로를 지정합니다. 서비스 계정 JSON은 저장소에 올리지 않습니다.
 
 ## MVP 기능
 

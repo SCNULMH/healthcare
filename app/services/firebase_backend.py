@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from typing import Any
 
@@ -13,8 +14,8 @@ def is_enabled() -> bool:
 
 def get_db():
     settings = get_settings()
-    if not settings.firebase_credentials_path:
-        raise RuntimeError("FIREBASE_CREDENTIALS_PATH가 필요합니다.")
+    if not settings.firebase_credentials_path and not settings.firebase_credentials_json:
+        raise RuntimeError("FIREBASE_CREDENTIALS_PATH 또는 FIREBASE_CREDENTIALS_JSON이 필요합니다.")
     try:
         import firebase_admin
         from firebase_admin import credentials, firestore
@@ -22,7 +23,8 @@ def get_db():
         raise RuntimeError("firebase-admin 패키지가 설치되어야 합니다.") from exc
 
     if not firebase_admin._apps:
-        cred = credentials.Certificate(settings.firebase_credentials_path)
+        source = json.loads(settings.firebase_credentials_json) if settings.firebase_credentials_json else settings.firebase_credentials_path
+        cred = credentials.Certificate(source)
         options = {"projectId": settings.firebase_project_id} if settings.firebase_project_id else None
         firebase_admin.initialize_app(cred, options)
     return firestore.client()

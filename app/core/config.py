@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     database_backend: str = "sqlite"
     database_path: str = "data/reset_coach.sqlite3"
     firebase_credentials_path: str | None = None
+    firebase_credentials_json: str | None = None
     firebase_project_id: str | None = None
     firebase_web_app_id: str | None = None
     risk_model_mode: str = "auto"

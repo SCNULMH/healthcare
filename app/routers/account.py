@@ -48,7 +48,8 @@ async def account_status() -> dict:
         "firebase_enabled": firebase_backend.is_enabled(),
         "firebase_project_id": settings.firebase_project_id,
         "firebase_web_app_id": settings.firebase_web_app_id,
-        "credential_configured": bool(settings.firebase_credentials_path),
+        "credential_configured": bool(settings.firebase_credentials_path or settings.firebase_credentials_json),
+        "credential_source": "json_env" if settings.firebase_credentials_json else "file_path" if settings.firebase_credentials_path else "missing",
     }
 
 

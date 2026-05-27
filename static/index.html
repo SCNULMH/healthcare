@@ -12,7 +12,7 @@
         <header class="app-header">
           <button class="icon-button" type="button" data-back aria-label="이전 화면">‹</button>
           <strong id="screen-title">검진AI 리셋코치</strong>
-          <button class="icon-button" type="button" data-screen-target="account" aria-label="계정">ID</button>
+          <button class="icon-button" type="button" data-screen-target="account" aria-label="계정">👤</button>
         </header>
 
         <main class="screen-stack">
@@ -204,7 +204,8 @@
               <p>로그인하면 분석 결과, 이전 진료기록, OCR 자동입력 흐름을 한 곳에서 이어갈 수 있습니다.</p>
             </div>
 
-            <div class="account-card">
+            <div class="account-card account-section">
+              <div class="section-kicker">Account</div>
               <div class="card-title"><span class="icon-chip blue">ID</span><strong>계정 생성·로그인</strong></div>
               <p id="account-status" class="muted">로그인하면 분석 결과와 이전 진료기록을 Firebase에 저장합니다.</p>
               <label>이메일 <input id="account-email" type="email" placeholder="name@example.com" autocomplete="email" /></label>
@@ -215,7 +216,8 @@
               </div>
             </div>
 
-            <div class="account-card">
+            <div class="account-card account-section">
+              <div class="section-kicker">Profile</div>
               <div class="card-title"><span class="icon-chip blue">ME</span><strong>개인 기본정보</strong></div>
               <div class="card-grid compact">
                 <label>이름 <input id="profile-name" type="text" placeholder="선택" /></label>
@@ -223,35 +225,43 @@
               </div>
               <label>질환/복용약/알레르기 <input id="profile-medical-note" type="text" placeholder="예: 고혈압약 복용, 페니실린 알레르기" /></label>
               <button id="profile-save" class="ghost wide" type="button">개인정보 저장</button>
-              <label>이전 진료기록 <input id="record-memo" type="text" placeholder="예: 2025.12 내과 혈압 상담" /></label>
+            </div>
+
+            <div class="account-card account-section">
+              <div class="section-kicker">Records</div>
+              <div class="card-title"><span class="icon-chip yellow">Rx</span><strong>이전 진료기록</strong></div>
+              <label>진료기록 메모 <input id="record-memo" type="text" placeholder="예: 2025.12 내과 혈압 상담" /></label>
               <button id="record-save" class="ghost wide" type="button">진료기록 추가</button>
             </div>
 
-            <div class="screen-heading">
-              <h2>검진 결과지 자동입력</h2>
-              <p>OCR 결과는 입력값으로 자동 반영한 뒤 검진 수치 화면으로 이동합니다. 사용자가 확인·수정한 다음 분석합니다.</p>
-            </div>
+            <div class="ocr-card account-section">
+              <div class="section-kicker">OCR</div>
+              <div class="screen-heading">
+                <h2>검진 결과지 자동입력</h2>
+                <p>OCR 결과는 입력값으로 자동 반영한 뒤 검진 수치 화면으로 이동합니다. 사용자가 확인·수정한 다음 분석합니다.</p>
+              </div>
 
-            <div class="upload-choice">
-              <button type="button"><span>▣</span><strong>사진 촬영</strong></button>
-              <button type="button"><span>▤</span><strong>갤러리/파일</strong></button>
-            </div>
+              <div class="upload-choice">
+                <button type="button"><span>▣</span><strong>사진 촬영</strong></button>
+                <button type="button"><span>▤</span><strong>갤러리/파일</strong></button>
+              </div>
 
-            <div class="scan-panel" aria-hidden="true">
-              <span class="scan-line"></span>
-              <i class="scan-box a"></i>
-              <i class="scan-box b"></i>
-              <i class="scan-box c"></i>
-              <i class="scan-box d"></i>
-            </div>
+              <div class="scan-panel" aria-hidden="true">
+                <span class="scan-line"></span>
+                <i class="scan-box a"></i>
+                <i class="scan-box b"></i>
+                <i class="scan-box c"></i>
+                <i class="scan-box d"></i>
+              </div>
 
-            <input id="ocr-file" class="file-input" type="file" accept="image/*,.pdf" />
-            <button id="ocr-demo" class="ghost wide" type="button">OCR 자동입력 실행</button>
-            <div class="privacy-note">
-              <strong>개인정보 원칙</strong>
-              <p>업로드 원본은 영구 저장하지 않고, 외부 OCR API 사용 시에는 별도 동의를 받은 뒤 수치만 분석에 사용합니다.</p>
+              <input id="ocr-file" class="file-input" type="file" accept="image/*,.pdf" />
+              <button id="ocr-demo" class="primary wide" type="button">OCR 자동입력 실행</button>
+              <div class="privacy-note">
+                <strong>개인정보 원칙</strong>
+                <p>업로드 원본은 영구 저장하지 않고, 외부 OCR API 사용 시에는 별도 동의를 받은 뒤 수치만 분석에 사용합니다.</p>
+              </div>
+              <p id="ocr-status" class="muted"></p>
             </div>
-            <p id="ocr-status" class="muted"></p>
           </section>
 
           <section class="screen result-screen" id="screen-result" data-title="분석 결과">

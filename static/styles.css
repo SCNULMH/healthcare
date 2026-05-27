@@ -415,10 +415,40 @@ select:focus {
   gap: 12px;
 }
 
+.account-section {
+  position: relative;
+  border-color: #dbeafe;
+}
+
+.section-kicker {
+  width: fit-content;
+  border-radius: 999px;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .account-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.ocr-card {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #bbf7d0;
+  border-radius: 22px;
+  background: #f8fff9;
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.ocr-card .screen-heading {
+  margin-bottom: 0;
 }
 
 .bottom-cta {
