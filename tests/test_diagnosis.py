@@ -58,6 +58,7 @@ class DiagnosisTests(unittest.TestCase):
         plan = create_personal_plan(health(), lifestyle(), risks)
 
         self.assertLessEqual(len(plan["today_actions"]), 2)
+        self.assertGreater(len(plan["impact_summary"]), 0)
         rendered = " ".join(action["detail"] for action in plan["today_actions"])
         self.assertNotIn("러닝", rendered)
         self.assertNotIn("단백질 쉐이크만", rendered)

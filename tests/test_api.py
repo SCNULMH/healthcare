@@ -80,7 +80,9 @@ class RiskApiTests(unittest.TestCase):
         self.assertIn("reliability", payload)
         self.assertEqual(payload["ai_explanation"]["title"], "AI가 이렇게 판단했어요")
         self.assertEqual(len(payload["ai_explanation"]["steps"]), 3)
+        self.assertIn("criteria", payload["ai_explanation"])
         self.assertLessEqual(len(payload["plan"]["today_actions"]), 2)
+        self.assertIn("impact_summary", payload["plan"])
         self.assertIn("cards", payload["reliability"])
 
     def test_predict_stores_anonymous_history_and_compares(self):

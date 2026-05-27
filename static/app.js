@@ -166,6 +166,7 @@ function renderLoading() {
 function render(data) {
   const primaryRisk = [...data.risks].sort((a, b) => b.probability - a.probability)[0];
   const aiSteps = data.ai_explanation?.steps || [];
+  const criteria = data.ai_explanation?.criteria || [];
   const inputNotes = (data.input_notes || []).map((note) => `<p class="engine-note">${note}</p>`).join("");
   const comparison = renderComparison(data.comparison);
   const reliability = renderReliability(data.reliability);
@@ -196,6 +197,7 @@ function render(data) {
           <h3>${action.title}</h3>
           <p>${action.detail}</p>
           <p class="muted">난이도: ${action.difficulty}</p>
+          ${action.impact ? `<p class="impact-note">${action.impact}</p>` : ""}
         </article>
       `,
     )
@@ -203,6 +205,18 @@ function render(data) {
 
   const goals = data.plan.weekly_goals
     .map((goal) => `<article class="weekly-card"><p>${goal}</p></article>`)
+    .join("");
+
+  const impactSummary = (data.plan.impact_summary || [])
+    .map(
+      (item) => `
+        <article class="impact-card">
+          <strong>${item.factor}</strong>
+          <p>현재 ${item.current} · 목표 ${item.threshold}</p>
+          <span>${item.impact}</span>
+        </article>
+      `,
+    )
     .join("");
 
   const aiExplanation = aiSteps
@@ -214,6 +228,18 @@ function render(data) {
             <h3>${step.title}</h3>
             <p>${step.description}</p>
           </div>
+        </article>
+      `,
+    )
+    .join("");
+
+  const criteriaCards = criteria
+    .map(
+      (item) => `
+        <article class="criteria-card">
+          <h3>${item.name}</h3>
+          <p><strong>측정 기준</strong>${item.primary}</p>
+          <p><strong>낮추는 행동</strong>${item.lifestyle}</p>
         </article>
       `,
     )
@@ -243,6 +269,7 @@ function render(data) {
         <p>${data.ai_explanation?.model_note || ""}</p>
       </div>
       <div class="ai-step-list">${aiExplanation}</div>
+      <div class="criteria-list">${criteriaCards}</div>
     </section>
 
     <section class="result-section">
@@ -261,6 +288,7 @@ function render(data) {
         <p>${data.plan.title}</p>
       </div>
       <div class="action-list">${actions}</div>
+      <div class="impact-list">${impactSummary}</div>
     </section>
 
     <section class="result-section">

@@ -904,6 +904,8 @@ select:focus {
 .action-list,
 .weekly-list,
 .ai-step-list,
+.criteria-list,
+.impact-list,
 .reliability-list {
   display: grid;
   gap: 12px;
@@ -950,6 +952,64 @@ select:focus {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.55;
+}
+
+.criteria-card,
+.impact-card {
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  background: white;
+  padding: 14px;
+}
+
+.criteria-card h3,
+.criteria-card p,
+.impact-card p {
+  margin: 0;
+}
+
+.criteria-card h3 {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.criteria-card p,
+.impact-card p,
+.impact-card span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.criteria-card strong {
+  display: block;
+  margin-top: 8px;
+  color: #1d4ed8;
+  font-size: 12px;
+}
+
+.impact-card {
+  background: #f8fafc;
+}
+
+.impact-card strong,
+.impact-card span {
+  display: block;
+}
+
+.impact-card strong {
+  margin-bottom: 4px;
+}
+
+.impact-card span,
+.impact-note {
+  margin-top: 8px !important;
+  border-radius: 14px;
+  background: #ecfdf5;
+  color: #15803d !important;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .result-card h3 {
