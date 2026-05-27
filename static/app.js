@@ -21,7 +21,7 @@ const profileSave = document.querySelector("#profile-save");
 const recordMemo = document.querySelector("#record-memo");
 const recordSave = document.querySelector("#record-save");
 
-const screenOrder = ["home", "basic", "checkup", "activity", "lifestyle", "ocr", "result"];
+const screenOrder = ["home", "account", "basic", "checkup", "activity", "lifestyle", "result"];
 let currentScreen = "home";
 let currentUser = getStoredUser();
 let activeClientId = currentUser?.user_id || getClientId();
@@ -552,7 +552,8 @@ ocrDemo.addEventListener("click", async () => {
     fillForm(data.prefill);
     const provider = data.provider ? `[${data.provider}] ` : "";
     const prefix = data.filename ? `${data.filename}: ` : "";
-    ocrStatus.textContent = `${provider}${prefix}${data.message}`;
+    ocrStatus.textContent = `${provider}${prefix}${data.message} 검진 수치 화면에서 확인해 주세요.`;
+    goToScreen("checkup");
   } catch (error) {
     ocrStatus.textContent = error.message;
   }

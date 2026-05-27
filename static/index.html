@@ -12,7 +12,7 @@
         <header class="app-header">
           <button class="icon-button" type="button" data-back aria-label="이전 화면">‹</button>
           <strong id="screen-title">검진AI 리셋코치</strong>
-          <button class="icon-button" type="button" data-screen-target="ocr" aria-label="OCR">⌗</button>
+          <button class="icon-button" type="button" data-screen-target="account" aria-label="계정">ID</button>
         </header>
 
         <main class="screen-stack">
@@ -52,25 +52,6 @@
             <div id="history-summary" class="history-card">
               <strong>이전 분석 기록</strong>
               <p>아직 저장된 분석 결과가 없습니다. 첫 분석 후 변화 추이를 확인할 수 있습니다.</p>
-            </div>
-
-            <div class="account-card">
-              <div class="card-title"><span class="icon-chip blue">ID</span><strong>계정·진료기록</strong></div>
-              <p id="account-status" class="muted">로그인하면 분석 결과와 이전 진료기록을 Firebase에 저장합니다.</p>
-              <label>이메일 <input id="account-email" type="email" placeholder="name@example.com" autocomplete="email" /></label>
-              <label>비밀번호 <input id="account-password" type="password" placeholder="8자 이상" autocomplete="current-password" /></label>
-              <div class="account-actions">
-                <button id="account-register" class="ghost" type="button">가입</button>
-                <button id="account-login" class="primary" type="button">로그인</button>
-              </div>
-              <div class="card-grid compact">
-                <label>이름 <input id="profile-name" type="text" placeholder="선택" /></label>
-                <label>출생연도 <input id="profile-birth-year" type="number" placeholder="예: 1985" /></label>
-              </div>
-              <label>질환/복용약/알레르기 <input id="profile-medical-note" type="text" placeholder="예: 고혈압약 복용, 페니실린 알레르기" /></label>
-              <button id="profile-save" class="ghost wide" type="button">개인정보 저장</button>
-              <label>이전 진료기록 <input id="record-memo" type="text" placeholder="예: 2025.12 내과 혈압 상담" /></label>
-              <button id="record-save" class="ghost wide" type="button">진료기록 추가</button>
             </div>
 
             <div class="quick-actions">
@@ -217,10 +198,38 @@
             <button class="primary wide bottom-cta" type="submit">AI 위험도 분석하기</button>
           </section>
 
-          <section class="screen" id="screen-ocr" data-title="OCR 업로드">
+          <section class="screen" id="screen-account" data-title="개인화">
             <div class="screen-heading">
-              <h2>건강검진 결과지 업로드</h2>
-              <p>이번 MVP에서는 데모 흐름으로 제공하고, 실제 OCR 적용 시에는 추출된 수치를 사용자가 확인·수정한 뒤 분석에 반영합니다.</p>
+              <h2>계정과 개인화 데이터를 관리하세요</h2>
+              <p>로그인하면 분석 결과, 이전 진료기록, OCR 자동입력 흐름을 한 곳에서 이어갈 수 있습니다.</p>
+            </div>
+
+            <div class="account-card">
+              <div class="card-title"><span class="icon-chip blue">ID</span><strong>계정 생성·로그인</strong></div>
+              <p id="account-status" class="muted">로그인하면 분석 결과와 이전 진료기록을 Firebase에 저장합니다.</p>
+              <label>이메일 <input id="account-email" type="email" placeholder="name@example.com" autocomplete="email" /></label>
+              <label>비밀번호 <input id="account-password" type="password" placeholder="8자 이상" autocomplete="current-password" /></label>
+              <div class="account-actions">
+                <button id="account-register" class="ghost" type="button">계정 생성</button>
+                <button id="account-login" class="primary" type="button">로그인</button>
+              </div>
+            </div>
+
+            <div class="account-card">
+              <div class="card-title"><span class="icon-chip blue">ME</span><strong>개인 기본정보</strong></div>
+              <div class="card-grid compact">
+                <label>이름 <input id="profile-name" type="text" placeholder="선택" /></label>
+                <label>출생연도 <input id="profile-birth-year" type="number" placeholder="예: 1985" /></label>
+              </div>
+              <label>질환/복용약/알레르기 <input id="profile-medical-note" type="text" placeholder="예: 고혈압약 복용, 페니실린 알레르기" /></label>
+              <button id="profile-save" class="ghost wide" type="button">개인정보 저장</button>
+              <label>이전 진료기록 <input id="record-memo" type="text" placeholder="예: 2025.12 내과 혈압 상담" /></label>
+              <button id="record-save" class="ghost wide" type="button">진료기록 추가</button>
+            </div>
+
+            <div class="screen-heading">
+              <h2>검진 결과지 자동입력</h2>
+              <p>OCR 결과는 입력값으로 자동 반영한 뒤 검진 수치 화면으로 이동합니다. 사용자가 확인·수정한 다음 분석합니다.</p>
             </div>
 
             <div class="upload-choice">
@@ -237,7 +246,7 @@
             </div>
 
             <input id="ocr-file" class="file-input" type="file" accept="image/*,.pdf" />
-            <button id="ocr-demo" class="ghost wide" type="button">OCR 데모 흐름 보기</button>
+            <button id="ocr-demo" class="ghost wide" type="button">OCR 자동입력 실행</button>
             <div class="privacy-note">
               <strong>개인정보 원칙</strong>
               <p>업로드 원본은 영구 저장하지 않고, 외부 OCR API 사용 시에는 별도 동의를 받은 뒤 수치만 분석에 사용합니다.</p>
@@ -262,7 +271,6 @@
           <button type="button" data-screen-target="checkup"><span>2</span>검진</button>
           <button type="button" data-screen-target="activity"><span>3</span>활동</button>
           <button type="button" data-screen-target="lifestyle"><span>4</span>생활</button>
-          <button type="button" data-screen-target="ocr"><span>▣</span>OCR</button>
           <button type="button" data-screen-target="result"><span>◉</span>분석</button>
         </nav>
       </form>
