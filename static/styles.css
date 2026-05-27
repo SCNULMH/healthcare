@@ -221,6 +221,34 @@ button {
   font-size: 38px;
 }
 
+.score-band {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #e5e7eb;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.score-band.normal {
+  background: rgba(187, 247, 208, 0.22);
+  color: #bbf7d0;
+}
+
+.score-band.caution {
+  background: rgba(254, 243, 199, 0.2);
+  color: #fde68a;
+}
+
+.score-band.high {
+  background: rgba(254, 202, 202, 0.2);
+  color: #fecaca;
+}
+
 .health-score-card p {
   max-width: 210px;
   margin: 0;
@@ -413,6 +441,13 @@ label {
   color: #475569;
   font-size: 13px;
   font-weight: 800;
+}
+
+.avg-hint {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
 }
 
 input,

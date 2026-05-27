@@ -38,6 +38,7 @@
                 <span id="home-score-label">오늘의 건강 리셋 점수</span>
                 <button id="score-help-toggle" class="score-help-button" type="button" aria-expanded="false" aria-controls="score-help-panel">?</button>
                 <strong id="home-score">--</strong>
+                <em id="home-score-band" class="score-band">저장된 분석 없음</em>
                 <p id="home-score-summary">검진 수치와 생활패턴을 함께 분석합니다.</p>
               </div>
               <div class="spark-bars" aria-hidden="true">
@@ -54,6 +55,7 @@
               <strong>건강 리셋 점수 기준</strong>
               <p>최근 분석에서 가장 높게 나온 질환 위험도를 100점에서 뺀 참고 점수입니다.</p>
               <p>예: 주요 위험도 65%라면 리셋 점수는 35점입니다. 점수가 높을수록 현재 입력값 기준의 주요 위험 신호가 낮다는 뜻입니다.</p>
+              <p>구간은 70~100 안정권, 40~69 주의권, 0~39 위험군으로 표시합니다. 최근 저장된 분석이 있으면 그 결과를 기준으로 갱신됩니다.</p>
               <p>이 점수는 의료 진단 점수가 아니며, 입력한 검진 수치와 생활패턴을 바탕으로 한 예방관리 참고 지표입니다.</p>
             </div>
 
@@ -181,16 +183,17 @@
                   <option value="rarely">거의 안 함</option>
                 </select>
               </label>
-              <label>주간 단 음료 <input name="sugary_drinks_per_week" type="number" value="7" /></label>
-              <label>주간 야식 <input name="late_meals_per_week" type="number" value="3" /></label>
-              <label>주간 외식 <input name="eating_out_per_week" type="number" value="5" /></label>
-              <label>수면시간 <input name="sleep_hours" type="number" step="0.5" value="6" /></label>
+              <label>주간 단 음료 <input name="sugary_drinks_per_week" type="number" value="7" /><span class="avg-hint">40대 참고 평균 주 3~4회</span></label>
+              <label>주간 야식 <input name="late_meals_per_week" type="number" value="3" /><span class="avg-hint">40대 참고 평균 주 1~2회</span></label>
+              <label>주간 외식 <input name="eating_out_per_week" type="number" value="5" /><span class="avg-hint">40대 참고 평균 주 3~4회</span></label>
+              <label>수면시간 <input name="sleep_hours" type="number" step="0.5" value="6" /><span class="avg-hint">40대 참고 평균 6.5~7시간</span></label>
               <label>흡연
                 <select name="smoking">
                   <option value="never">비흡연</option>
                   <option value="past" selected>과거 흡연</option>
                   <option value="current">현재 흡연</option>
                 </select>
+                <span class="avg-hint">40대 참고 평균: 비흡연·과거 흡연 비중이 더 큼</span>
               </label>
               <label>음주
                 <select name="drinking">
@@ -199,6 +202,7 @@
                   <option value="moderate" selected>보통</option>
                   <option value="heavy">잦음</option>
                 </select>
+                <span class="avg-hint">40대 참고 평균: light~moderate 범위</span>
               </label>
               <label class="check-row"><input name="can_prepare_meals" type="checkbox" /> 식사 준비 가능</label>
             </div>

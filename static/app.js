@@ -394,6 +394,7 @@ async function refreshHistory() {
   const homeScore = document.querySelector("#home-score");
   const homeScoreLabel = document.querySelector("#home-score-label");
   const homeScoreSummary = document.querySelector("#home-score-summary");
+  const homeScoreBand = document.querySelector("#home-score-band");
   const historySummary = document.querySelector("#history-summary");
   if (!historySummary) return;
   try {
@@ -404,6 +405,8 @@ async function refreshHistory() {
     if (!latest) {
       homeScore.textContent = "--";
       homeScoreLabel.textContent = "오늘의 건강 리셋 점수";
+      homeScoreBand.textContent = "저장된 분석 없음";
+      homeScoreBand.className = "score-band";
       homeScoreSummary.textContent = "검진 수치와 생활패턴을 함께 분석합니다.";
       historySummary.innerHTML = `
         <strong>이전 분석 기록</strong>
@@ -412,6 +415,7 @@ async function refreshHistory() {
       return;
     }
     const resetScore = Math.max(5, 100 - latest.primary_risk_probability);
+    const scoreBand = scoreBandLabel(resetScore);
     const summary = data.summary || {};
     const riskDelta = summary.risk_delta_from_oldest || 0;
     const deltaText = data.items.length > 1
@@ -419,6 +423,8 @@ async function refreshHistory() {
       : "다음 분석부터 변화 비교";
     homeScore.textContent = resetScore;
     homeScoreLabel.textContent = "최근 건강 리셋 점수";
+    homeScoreBand.textContent = `${scoreBand.range} · ${scoreBand.label}`;
+    homeScoreBand.className = `score-band ${scoreBand.level}`;
     homeScoreSummary.textContent = `${latest.primary_risk_label} ${latest.primary_risk_probability}% 기준입니다.`;
     historySummary.innerHTML = `
       <strong>이전 값 변화</strong>
@@ -440,6 +446,12 @@ async function refreshHistory() {
   } catch (error) {
     historySummary.innerHTML = `<strong>이전 분석 기록</strong><p>${error.message}</p>`;
   }
+}
+
+function scoreBandLabel(score) {
+  if (score >= 70) return { range: "70~100", label: "안정권", level: "normal" };
+  if (score >= 40) return { range: "40~69", label: "주의권", level: "caution" };
+  return { range: "0~39", label: "위험군", level: "high" };
 }
 
 function getStoredUser() {
