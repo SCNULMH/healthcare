@@ -85,15 +85,28 @@ class RiskApiTests(unittest.TestCase):
         self.assertIn("impact_summary", payload["plan"])
         self.assertIn("cards", payload["reliability"])
 
-    def test_predict_stores_anonymous_history_and_compares(self):
+    def test_save_result_stores_anonymous_history_and_compares(self):
         demo = self.client.get("/risk/demo").json()
         demo["client_id"] = "test-client-history"
 
-        first = self.client.post("/risk/predict", json=demo)
+        first_prediction = self.client.post("/risk/predict", json=demo).json()
+        first = self.client.post(
+            "/risk/save-result",
+            json={**demo, "bmi": first_prediction["bmi"], "risks": first_prediction["risks"], "plan": first_prediction["plan"]},
+        )
         second_payload = self.client.get("/risk/demo").json()
         second_payload["client_id"] = "test-client-history"
         second_payload["health"]["fasting_glucose"] = 99
-        second = self.client.post("/risk/predict", json=second_payload)
+        second_prediction = self.client.post("/risk/predict", json=second_payload).json()
+        second = self.client.post(
+            "/risk/save-result",
+            json={
+                **second_payload,
+                "bmi": second_prediction["bmi"],
+                "risks": second_prediction["risks"],
+                "plan": second_prediction["plan"],
+            },
+        )
         history = self.client.get("/risk/history/test-client-history")
 
         self.assertEqual(first.status_code, 200)

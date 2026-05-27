@@ -29,6 +29,7 @@ const screenOrder = ["home", "account", "basic", "checkup", "activity", "lifesty
 let currentScreen = "home";
 let currentUser = getStoredUser();
 let activeClientId = currentUser?.user_id || getClientId();
+let latestAnalysis = null;
 
 const healthFields = [
   "age",
@@ -164,6 +165,7 @@ function renderLoading() {
 }
 
 function render(data) {
+  latestAnalysis = data;
   const primaryRisk = [...data.risks].sort((a, b) => b.probability - a.probability)[0];
   const aiSteps = data.ai_explanation?.steps || [];
   const criteria = data.ai_explanation?.criteria || [];
@@ -260,6 +262,8 @@ function render(data) {
         <p class="engine-note">예측 엔진: ${data.engine?.mode || "rule"} · ${data.engine?.message || "설명 가능한 규칙 기반 AI 엔진을 사용했습니다."}</p>
         ${inputNotes}
         ${comparison}
+        <button id="save-analysis" class="primary wide save-analysis-button" type="button">진단결과 저장</button>
+        <p id="save-analysis-status" class="muted save-analysis-status">저장 버튼을 누를 때만 이전 기록에 반영됩니다.</p>
       </div>
     </div>
 
@@ -299,8 +303,39 @@ function render(data) {
       <div class="weekly-list">${goals}</div>
     </section>
   `;
-  refreshHistory();
   goToScreen("result");
+  document.querySelector("#save-analysis").addEventListener("click", saveLatestAnalysis);
+}
+
+async function saveLatestAnalysis() {
+  const status = document.querySelector("#save-analysis-status");
+  if (!latestAnalysis) return;
+  try {
+    status.textContent = "진단결과를 저장하는 중입니다.";
+    const payload = {
+      client_id: activeClientId,
+      health: readPayload().health,
+      lifestyle: readPayload().lifestyle,
+      bmi: latestAnalysis.bmi,
+      risks: latestAnalysis.risks,
+      plan: latestAnalysis.plan,
+    };
+    const response = await fetch("/risk/save-result", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.detail || "저장에 실패했습니다.");
+    latestAnalysis.comparison = data.comparison;
+    status.textContent = data.comparison?.message || "진단결과를 저장했습니다.";
+    const button = document.querySelector("#save-analysis");
+    button.disabled = true;
+    button.textContent = "저장 완료";
+    refreshHistory();
+  } catch (error) {
+    status.textContent = error.message;
+  }
 }
 
 function renderReliability(reliability) {

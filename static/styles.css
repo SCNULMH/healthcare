@@ -900,6 +900,15 @@ select:focus {
   color: #dc2626;
 }
 
+.save-analysis-button {
+  margin-top: 14px;
+}
+
+.save-analysis-status {
+  margin-top: 8px !important;
+  font-size: 12px;
+}
+
 .risk-list,
 .action-list,
 .weekly-list,

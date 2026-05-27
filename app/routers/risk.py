@@ -59,6 +59,12 @@ class RiskRequest(BaseModel):
     lifestyle: LifestyleProfileIn
 
 
+class SaveResultRequest(RiskRequest):
+    bmi: float
+    risks: list[dict]
+    plan: dict
+
+
 @router.get("/demo")
 async def get_demo() -> dict:
     return demo_profile()
@@ -89,6 +95,19 @@ async def get_metadata() -> dict:
 @router.get("/history/{client_id}")
 async def read_history(client_id: str, limit: int = 5) -> dict:
     return get_history(client_id, limit=max(1, min(limit, 10)))
+
+
+@router.post("/save-result")
+async def save_result(payload: SaveResultRequest) -> dict:
+    comparison = save_analysis(
+        client_id=payload.client_id,
+        bmi=payload.bmi,
+        risks=payload.risks,
+        plan=payload.plan,
+        health=payload.health.model_dump(),
+        lifestyle=payload.lifestyle.model_dump(),
+    )
+    return {"status": "saved", "comparison": comparison}
 
 
 def _ai_explanation() -> dict:
@@ -187,14 +206,6 @@ async def predict_risk(payload: RiskRequest) -> dict:
     plan = create_personal_plan(health, lifestyle, risks)
     bmi = round(health.bmi, 1)
     risk_dicts = [risk.to_dict() for risk in risks]
-    comparison = save_analysis(
-        client_id=payload.client_id,
-        bmi=bmi,
-        risks=risk_dicts,
-        plan=plan,
-        health=payload.health.model_dump(),
-        lifestyle=payload.lifestyle.model_dump(),
-    )
     return {
         "disclaimer": "예측 결과는 진단이 아니며, 정확한 판단과 치료는 의료진 상담이 필요합니다.",
         "bmi": bmi,
@@ -203,7 +214,8 @@ async def predict_risk(payload: RiskRequest) -> dict:
         "ai_explanation": _ai_explanation(),
         "engine": engine,
         "input_notes": _input_notes(health),
-        "comparison": comparison,
+        "comparison": None,
+        "saved": False,
         "reliability": _reliability_summary(health, risk_dicts, engine),
     }
 
