@@ -151,7 +151,7 @@ def update_profile(user_id: str, profile: dict[str, Any]) -> dict[str, Any]:
     user = get_profile(user_id)
     if not user:
         raise ValueError("사용자를 찾을 수 없습니다.")
-    merged = {**user.get("profile", {}), **profile}
+    merged = {**user.get("profile", {}), **_clean_profile(profile)}
     if firebase_backend.is_enabled():
         firebase_backend.save_user(user_id, {"profile": merged, "updated_at": _now()})
         return {"user_id": user_id, "email": user["email"], "profile": merged}
@@ -213,5 +213,27 @@ def _public_user(user: dict[str, Any]) -> dict[str, Any]:
     return {
         "user_id": user["user_id"],
         "email": user["email"],
-        "profile": user.get("profile", {}),
+        "profile": _clean_profile(user.get("profile", {})),
     }
+
+
+def _clean_profile(profile: dict[str, Any]) -> dict[str, Any]:
+    cleaned = {key: value for key, value in profile.items() if value not in {None, ""}}
+    if "medical_note" not in cleaned:
+        notes = []
+        for key in ("conditions", "medications", "allergies"):
+            value = cleaned.get(key)
+            if value and value not in notes:
+                notes.append(value)
+        if notes:
+            cleaned["medical_note"] = " / ".join(notes)
+    elif isinstance(cleaned["medical_note"], str):
+        cleaned["medical_note"] = _dedupe_note(cleaned["medical_note"])
+    for key in ("conditions", "medications", "allergies"):
+        cleaned.pop(key, None)
+    return cleaned
+
+
+def _dedupe_note(value: str) -> str:
+    parts = [part.strip() for part in value.split("/") if part.strip()]
+    return " / ".join(dict.fromkeys(parts))

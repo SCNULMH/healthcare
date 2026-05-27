@@ -472,8 +472,7 @@ function setCurrentUser(user) {
 function fillAccountProfile(profile) {
   profileName.value = profile.name || "";
   profileBirthYear.value = profile.birth_year || "";
-  const notes = [profile.conditions, profile.medications, profile.allergies].filter(Boolean).join(" / ");
-  profileMedicalNote.value = notes;
+  profileMedicalNote.value = profile.medical_note ? dedupeMedicalNote(profile.medical_note) : "";
 }
 
 async function accountRequest(path, body, method = "POST") {
@@ -524,12 +523,19 @@ async function loginAccount() {
 
 function buildProfilePayload() {
   const medicalNote = profileMedicalNote.value.trim();
-  return {
-    name: profileName.value.trim() || null,
-    birth_year: profileBirthYear.value ? Number(profileBirthYear.value) : null,
-    conditions: medicalNote || null,
-    medications: medicalNote || null,
-  };
+  const payload = {};
+  if (profileName.value.trim()) payload.name = profileName.value.trim();
+  if (profileBirthYear.value) payload.birth_year = Number(profileBirthYear.value);
+  if (medicalNote) payload.medical_note = dedupeMedicalNote(medicalNote);
+  return payload;
+}
+
+function dedupeMedicalNote(value) {
+  const parts = value
+    .split("/")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  return [...new Set(parts)].join(" / ");
 }
 
 async function saveProfile() {
