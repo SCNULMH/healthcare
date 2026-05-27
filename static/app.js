@@ -30,6 +30,7 @@ let currentScreen = "home";
 let currentUser = getStoredUser();
 let activeClientId = currentUser?.user_id || getClientId();
 let latestAnalysis = null;
+let activeResultPanel = "result-panel-criteria";
 
 const healthFields = [
   "age",
@@ -329,8 +330,13 @@ function bindResultTabs() {
     .filter(Boolean);
 
   function activate(panelId) {
+    activeResultPanel = panelId;
     tabs.forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.resultPanel === panelId);
+      tab.setAttribute("aria-selected", String(tab.dataset.resultPanel === panelId));
+    });
+    panels.forEach((panel) => {
+      panel.classList.toggle("active", panel.id === panelId);
     });
   }
 
@@ -342,6 +348,8 @@ function bindResultTabs() {
       activate(tab.dataset.resultPanel);
     });
   });
+
+  activate(activeResultPanel);
 
   carousel.addEventListener("scroll", () => {
     const left = carousel.scrollLeft;
@@ -518,6 +526,7 @@ function setCurrentUser(user) {
     localStorage.setItem("resetCoachUser", JSON.stringify(user));
     const displayId = user.email || user.user_id;
     accountStatus.textContent = `${displayId} 아이디로 로그인되었습니다.`;
+    document.body.classList.add("logged-in");
     accountAuthForm.hidden = true;
     accountAuthActions.hidden = true;
     accountAuthForm.style.display = "none";
@@ -527,6 +536,7 @@ function setCurrentUser(user) {
   } else {
     localStorage.removeItem("resetCoachUser");
     accountStatus.textContent = "로그인하면 분석 결과와 이전 진료기록을 Firebase에 저장합니다.";
+    document.body.classList.remove("logged-in");
     accountAuthForm.hidden = false;
     accountAuthActions.hidden = false;
     accountAuthForm.style.display = "";

@@ -497,6 +497,11 @@ select:focus {
   gap: 12px;
 }
 
+body.logged-in #account-auth-form,
+body.logged-in #account-auth-actions {
+  display: none !important;
+}
+
 .account-section {
   position: relative;
   border-color: #dbeafe;
@@ -986,20 +991,20 @@ select:focus {
 }
 
 .result-carousel {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 100%;
-  gap: 14px;
-  overflow-x: auto;
+  display: block;
+  overflow: hidden;
   padding-bottom: 8px;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
 }
 
 .result-panel {
+  display: none;
   min-width: 0;
   margin: 0;
-  scroll-snap-align: start;
+}
+
+.result-panel.active {
+  display: block;
+  animation: fade-in 0.16s ease-out;
 }
 
 .risk-list,
