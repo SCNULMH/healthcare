@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>검진AI 리셋코치</title>
-    <link rel="stylesheet" href="/static/styles.css?v=260527-account2" />
+    <link rel="stylesheet" href="/static/styles.css?v=260527-score1" />
   </head>
   <body>
     <div class="app-shell">
@@ -36,6 +36,7 @@
             <div class="health-score-card">
               <div>
                 <span id="home-score-label">오늘의 건강 리셋 점수</span>
+                <button id="score-help-toggle" class="score-help-button" type="button" aria-expanded="false" aria-controls="score-help-panel">?</button>
                 <strong id="home-score">--</strong>
                 <p id="home-score-summary">검진 수치와 생활패턴을 함께 분석합니다.</p>
               </div>
@@ -47,6 +48,13 @@
                 <i style="height: 64%"></i>
                 <i style="height: 90%"></i>
               </div>
+            </div>
+
+            <div id="score-help-panel" class="score-help-panel" hidden>
+              <strong>건강 리셋 점수 기준</strong>
+              <p>최근 분석에서 가장 높게 나온 질환 위험도를 100점에서 뺀 참고 점수입니다.</p>
+              <p>예: 주요 위험도 65%라면 리셋 점수는 35점입니다. 점수가 높을수록 현재 입력값 기준의 주요 위험 신호가 낮다는 뜻입니다.</p>
+              <p>이 점수는 의료 진단 점수가 아니며, 입력한 검진 수치와 생활패턴을 바탕으로 한 예방관리 참고 지표입니다.</p>
             </div>
 
             <div id="history-summary" class="history-card">
@@ -288,6 +296,6 @@
       </form>
     </div>
 
-    <script src="/static/app.js?v=260527-account2"></script>
+    <script src="/static/app.js?v=260527-score1"></script>
   </body>
 </html>

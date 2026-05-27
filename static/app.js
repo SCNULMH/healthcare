@@ -22,6 +22,8 @@ const profileMedicalNote = document.querySelector("#profile-medical-note");
 const profileSave = document.querySelector("#profile-save");
 const recordMemo = document.querySelector("#record-memo");
 const recordSave = document.querySelector("#record-save");
+const scoreHelpToggle = document.querySelector("#score-help-toggle");
+const scoreHelpPanel = document.querySelector("#score-help-panel");
 
 const screenOrder = ["home", "account", "basic", "checkup", "activity", "lifestyle", "result"];
 let currentScreen = "home";
@@ -580,6 +582,11 @@ accountRegister.addEventListener("click", registerAccount);
 accountLogin.addEventListener("click", loginAccount);
 profileSave.addEventListener("click", saveProfile);
 recordSave.addEventListener("click", saveMedicalRecord);
+scoreHelpToggle.addEventListener("click", () => {
+  const nextHidden = !scoreHelpPanel.hidden ? true : false;
+  scoreHelpPanel.hidden = nextHidden;
+  scoreHelpToggle.setAttribute("aria-expanded", String(!nextHidden));
+});
 
 [accountEmail, accountPassword].forEach((input) => {
   input.addEventListener("keydown", (event) => {
