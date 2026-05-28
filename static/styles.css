@@ -604,6 +604,27 @@ body.logged-in #account-auth-actions {
   gap: 10px;
 }
 
+.profile-import-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-radius: 14px;
+  background: #f8fafc;
+  padding: 10px 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.small-button {
+  min-height: 32px;
+  width: auto;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
 .ocr-card {
   display: grid;
   gap: 14px;
