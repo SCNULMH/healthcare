@@ -471,9 +471,12 @@ button {
 }
 
 .field-unknown input {
-  width: 15px;
+  flex: 0 0 15px;
+  width: 15px !important;
+  height: 15px;
   min-height: 15px;
   accent-color: var(--brand);
+  padding: 0;
 }
 
 .card-grid {
