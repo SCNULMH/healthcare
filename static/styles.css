@@ -541,6 +541,7 @@ select:focus {
 .card-grid > label,
 .input-card,
 .activity-card,
+.drink-card,
 .account-card,
 .empty-result,
 .result-card,
@@ -711,6 +712,35 @@ body.logged-in #account-auth-actions {
   background: var(--brand-soft);
   color: var(--brand-dark);
   font-size: 15px;
+}
+
+.drink-card {
+  display: grid;
+  gap: 10px;
+}
+
+.drink-card .card-title {
+  margin-bottom: 2px;
+}
+
+.inline-metric {
+  display: grid;
+  grid-template-columns: minmax(94px, auto) minmax(72px, 1fr) 26px;
+  gap: 8px;
+  align-items: center;
+}
+
+.inline-metric span,
+.inline-metric em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.inline-metric input {
+  min-height: 42px;
 }
 
 .check-row {
@@ -1461,6 +1491,10 @@ body.logged-in #account-auth-actions {
 
   .drinking-map {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .inline-metric {
+    grid-template-columns: minmax(88px, auto) minmax(62px, 1fr) 22px;
   }
 }
 
