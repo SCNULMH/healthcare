@@ -111,26 +111,26 @@
             </div>
 
             <article class="input-card">
-              <div class="card-title card-title-row"><span class="icon-chip red">❤️</span><strong>혈압</strong><label class="unknown-toggle"><input name="bp_unknown" type="checkbox" /> 모름</label></div>
+              <div class="card-title"><span class="icon-chip red">❤️</span><strong>혈압</strong></div>
               <div class="split-inputs">
-                <label>수축기 <input name="systolic_bp" type="number" value="132" /></label>
+                <label>수축기 <input name="systolic_bp" type="number" value="132" /><span class="field-unknown"><input name="unknown_systolic_bp" type="checkbox" /> 모름</span></label>
                 <span>/</span>
-                <label>이완기 <input name="diastolic_bp" type="number" value="86" /></label>
+                <label>이완기 <input name="diastolic_bp" type="number" value="86" /><span class="field-unknown"><input name="unknown_diastolic_bp" type="checkbox" /> 모름</span></label>
               </div>
             </article>
 
             <article class="input-card">
-              <div class="card-title card-title-row"><span class="icon-chip blue">🩸</span><strong>혈당</strong><label class="unknown-toggle"><input name="glucose_unknown" type="checkbox" /> 모름</label></div>
-              <label>공복혈당 <input name="fasting_glucose" type="number" value="132" /></label>
+              <div class="card-title"><span class="icon-chip blue">🩸</span><strong>혈당</strong></div>
+              <label>공복혈당 <input name="fasting_glucose" type="number" value="132" /><span class="field-unknown"><input name="unknown_fasting_glucose" type="checkbox" /> 모름</span></label>
             </article>
 
             <article class="input-card" id="lipid-card">
-              <div class="card-title card-title-row"><span class="icon-chip yellow">🟡</span><strong>지질 수치</strong><label class="unknown-toggle"><input name="lipid_unknown" type="checkbox" /> 모름</label></div>
+              <div class="card-title"><span class="icon-chip yellow">🟡</span><strong>지질 수치</strong></div>
               <div class="card-grid compact">
-                <label>총콜레스테롤 <input name="total_cholesterol" type="number" value="218" /></label>
-                <label>HDL <input name="hdl" type="number" value="42" /></label>
-                <label>LDL <input name="ldl" type="number" value="138" /></label>
-                <label>중성지방 <input name="triglyceride" type="number" value="185" /></label>
+                <label>총콜레스테롤 <input name="total_cholesterol" type="number" value="218" /><span class="field-unknown"><input name="unknown_total_cholesterol" type="checkbox" /> 모름</span></label>
+                <label>HDL <input name="hdl" type="number" value="42" /><span class="field-unknown"><input name="unknown_hdl" type="checkbox" /> 모름</span></label>
+                <label>LDL <input name="ldl" type="number" value="138" /><span class="field-unknown"><input name="unknown_ldl" type="checkbox" /> 모름</span></label>
+                <label>중성지방 <input name="triglyceride" type="number" value="185" /><span class="field-unknown"><input name="unknown_triglyceride" type="checkbox" /> 모름</span></label>
               </div>
             </article>
 

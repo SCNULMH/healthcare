@@ -460,6 +460,22 @@ button {
   accent-color: var(--brand);
 }
 
+.field-unknown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.field-unknown input {
+  width: 15px;
+  min-height: 15px;
+  accent-color: var(--brand);
+}
+
 .card-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -538,6 +554,14 @@ select:focus {
 }
 
 .muted-card input {
+  background: #e5e7eb;
+}
+
+.muted-field {
+  opacity: 0.68;
+}
+
+.muted-field > input {
   background: #e5e7eb;
 }
 

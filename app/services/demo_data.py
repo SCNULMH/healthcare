@@ -15,6 +15,7 @@ def demo_profile() -> dict:
             "hdl": 42,
             "ldl": 138,
             "triglyceride": 185,
+            "unknown_fields": [],
             "lipid_unknown": False,
         },
         "lifestyle": {

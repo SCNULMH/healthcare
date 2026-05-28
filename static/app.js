@@ -25,9 +25,6 @@ const recordMemo = document.querySelector("#record-memo");
 const recordSave = document.querySelector("#record-save");
 const scoreHelpToggle = document.querySelector("#score-help-toggle");
 const scoreHelpPanel = document.querySelector("#score-help-panel");
-const bpUnknown = document.querySelector("[name='bp_unknown']");
-const glucoseUnknown = document.querySelector("[name='glucose_unknown']");
-const lipidUnknown = document.querySelector("[name='lipid_unknown']");
 const lipidCard = document.querySelector("#lipid-card");
 
 const screenOrder = ["home", "account", "basic", "checkup", "activity", "lifestyle", "result"];
@@ -53,6 +50,15 @@ const healthFields = [
 ];
 
 const optionalNumericFields = new Set(["waist_cm"]);
+const unknownableHealthFields = new Set([
+  "systolic_bp",
+  "diastolic_bp",
+  "fasting_glucose",
+  "total_cholesterol",
+  "hdl",
+  "ldl",
+  "triglyceride",
+]);
 const bpFields = new Set(["systolic_bp", "diastolic_bp"]);
 const glucoseFields = new Set(["fasting_glucose"]);
 const lipidFields = new Set(["total_cholesterol", "hdl", "ldl", "triglyceride"]);
@@ -115,19 +121,14 @@ function readPayload() {
   const data = new FormData(form);
   const health = {};
   const lifestyle = {};
-  const isBpUnknown = data.get("bp_unknown") === "on";
-  const isGlucoseUnknown = data.get("glucose_unknown") === "on";
-  const isLipidUnknown = data.get("lipid_unknown") === "on";
+  const unknownFields = [...unknownableHealthFields].filter((field) => data.get(`unknown_${field}`) === "on");
+  const unknownSet = new Set(unknownFields);
 
   for (const field of healthFields) {
     const value = data.get(field);
     if (field === "sex") {
       health[field] = value;
-    } else if (isBpUnknown && bpFields.has(field)) {
-      health[field] = null;
-    } else if (isGlucoseUnknown && glucoseFields.has(field)) {
-      health[field] = null;
-    } else if (isLipidUnknown && lipidFields.has(field)) {
+    } else if (unknownSet.has(field)) {
       health[field] = null;
     } else if (optionalNumericFields.has(field) && String(value).trim() === "") {
       health[field] = null;
@@ -135,9 +136,10 @@ function readPayload() {
       health[field] = Number(value);
     }
   }
-  health.bp_unknown = isBpUnknown;
-  health.glucose_unknown = isGlucoseUnknown;
-  health.lipid_unknown = isLipidUnknown;
+  health.unknown_fields = unknownFields;
+  health.bp_unknown = [...bpFields].every((field) => unknownSet.has(field));
+  health.glucose_unknown = unknownSet.has("fasting_glucose");
+  health.lipid_unknown = [...lipidFields].every((field) => unknownSet.has(field));
 
   for (const field of lifestyleFields) {
     if (["smoking"].includes(field)) {
@@ -182,8 +184,11 @@ function updateBenchmarks() {
 function renderBenchmarkSummary() {
   const context = profileContext();
   const table = benchmarkTable[context.decade] || benchmarkTable[40];
-  const lipidText = readPayload().health.lipid_unknown
-    ? "지질 수치는 정확하게 모름으로 표시되어 결과에서 직접 수치 비교를 제외했습니다."
+  const payload = readPayload();
+  const lipidText = payload.health.lipid_unknown
+    ? "지질 수치는 모두 모름으로 표시되어 결과에서 직접 수치 비교를 제외했습니다."
+    : payload.health.unknown_fields?.some((field) => lipidFields.has(field))
+      ? "일부 지질 수치는 모름으로 표시되어 입력된 항목만 결과에 반영했습니다."
     : `지질 평균: 총콜레스테롤 ${table.total_cholesterol}, LDL ${table.ldl}, 중성지방 ${table.triglyceride}`;
   return `
     <div class="benchmark-summary">
@@ -196,18 +201,13 @@ function renderBenchmarkSummary() {
 }
 
 function updateUnknownState() {
-  const groups = [
-    { checked: Boolean(bpUnknown?.checked), fields: bpFields, card: bpUnknown?.closest(".input-card") },
-    { checked: Boolean(glucoseUnknown?.checked), fields: glucoseFields, card: glucoseUnknown?.closest(".input-card") },
-    { checked: Boolean(lipidUnknown?.checked), fields: lipidFields, card: lipidCard },
-  ];
-  groups.forEach(({ checked, fields, card }) => {
-    card?.classList.toggle("muted-card", checked);
-    fields.forEach((field) => {
-      const input = form.elements[field];
-      if (input) input.disabled = checked;
-    });
+  unknownableHealthFields.forEach((field) => {
+    const checked = Boolean(form.elements[`unknown_${field}`]?.checked);
+    const input = form.elements[field];
+    if (input) input.disabled = checked;
+    input?.closest("label")?.classList.toggle("muted-field", checked);
   });
+  lipidCard?.classList.toggle("muted-card", [...lipidFields].every((field) => form.elements[`unknown_${field}`]?.checked));
 }
 
 function fillForm(payload) {
@@ -446,6 +446,11 @@ function bindResultTabs() {
 async function saveLatestAnalysis() {
   const status = document.querySelector("#save-analysis-status");
   if (!latestAnalysis) return;
+  if (!currentUser) {
+    status.textContent = "로그인 후 진단결과를 저장할 수 있습니다. 오른쪽 위 계정 아이콘에서 로그인해 주세요.";
+    goToScreen("account");
+    return;
+  }
   try {
     status.textContent = "진단결과를 저장하는 중입니다.";
     const payload = {
@@ -810,9 +815,9 @@ accountRegister.addEventListener("click", registerAccount);
 accountLogin.addEventListener("click", loginAccount);
 profileSave.addEventListener("click", saveProfile);
 recordSave.addEventListener("click", saveMedicalRecord);
-bpUnknown?.addEventListener("change", updateUnknownState);
-glucoseUnknown?.addEventListener("change", updateUnknownState);
-lipidUnknown?.addEventListener("change", updateUnknownState);
+document.querySelectorAll("[name^='unknown_']").forEach((input) => {
+  input.addEventListener("change", updateUnknownState);
+});
 form.elements.age?.addEventListener("input", updateBenchmarks);
 form.elements.sex?.addEventListener("change", updateBenchmarks);
 profileBirthYear?.addEventListener("input", updateBenchmarks);

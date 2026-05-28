@@ -37,6 +37,7 @@ class HealthProfileIn(BaseModel):
     hdl: int | None = Field(default=None, ge=10, le=150)
     ldl: int | None = Field(default=None, ge=30, le=300)
     triglyceride: int | None = Field(default=None, ge=30, le=800)
+    unknown_fields: list[str] = Field(default_factory=list)
     bp_unknown: bool = False
     glucose_unknown: bool = False
     lipid_unknown: bool = False
@@ -148,6 +149,7 @@ def _ai_explanation() -> dict:
 
 def _input_notes(health: HealthProfile) -> list[str]:
     notes = []
+    unknown_fields = set(health.unknown_fields or [])
     if health.waist_cm is None:
         notes.append(
             "허리둘레가 입력되지 않아 복부비만 직접 판정은 제외하고 BMI, 혈압, 혈당, 지질 수치와 생활패턴 중심으로 분석했습니다."
@@ -158,6 +160,18 @@ def _input_notes(health: HealthProfile) -> list[str]:
         notes.append("공복혈당을 모름으로 표시해 혈당 직접값은 제외하고 BMI·단 음료·운동·걸음수 기준으로 반영했습니다.")
     if health.lipid_unknown:
         notes.append("지질 수치를 정확하게 모름으로 표시해 총콜레스테롤·HDL·LDL·중성지방 직접값은 제외하고 활동·생활 기준으로 반영했습니다.")
+    if unknown_fields and not (health.bp_unknown or health.glucose_unknown or health.lipid_unknown):
+        labels = {
+            "systolic_bp": "수축기혈압",
+            "diastolic_bp": "이완기혈압",
+            "fasting_glucose": "공복혈당",
+            "total_cholesterol": "총콜레스테롤",
+            "hdl": "HDL",
+            "ldl": "LDL",
+            "triglyceride": "중성지방",
+        }
+        text = ", ".join(labels[field] for field in sorted(unknown_fields) if field in labels)
+        notes.append(f"{text} 항목은 모름으로 표시되어 해당 직접값만 제외하고 분석했습니다.")
     return notes
 
 
@@ -208,16 +222,28 @@ def _reliability_summary(
 @router.post("/predict")
 async def predict_risk(payload: RiskRequest) -> dict:
     health_data = payload.health.model_dump()
+    allowed_unknown_fields = {
+        "systolic_bp",
+        "diastolic_bp",
+        "fasting_glucose",
+        "total_cholesterol",
+        "hdl",
+        "ldl",
+        "triglyceride",
+    }
+    unknown_fields = {field for field in health_data.get("unknown_fields", []) if field in allowed_unknown_fields}
     if health_data.get("bp_unknown"):
-        health_data["systolic_bp"] = None
-        health_data["diastolic_bp"] = None
+        unknown_fields.update({"systolic_bp", "diastolic_bp"})
     if health_data.get("glucose_unknown"):
-        health_data["fasting_glucose"] = None
+        unknown_fields.add("fasting_glucose")
     if health_data.get("lipid_unknown"):
-        health_data["total_cholesterol"] = None
-        health_data["hdl"] = None
-        health_data["ldl"] = None
-        health_data["triglyceride"] = None
+        unknown_fields.update({"total_cholesterol", "hdl", "ldl", "triglyceride"})
+    for field in unknown_fields:
+        health_data[field] = None
+    health_data["unknown_fields"] = sorted(unknown_fields)
+    health_data["bp_unknown"] = {"systolic_bp", "diastolic_bp"}.issubset(unknown_fields)
+    health_data["glucose_unknown"] = "fasting_glucose" in unknown_fields
+    health_data["lipid_unknown"] = {"total_cholesterol", "hdl", "ldl", "triglyceride"}.issubset(unknown_fields)
     health = HealthProfile(**health_data)
     lifestyle = LifestyleProfile(**payload.lifestyle.model_dump())
     risks = evaluate_health_risks(health, lifestyle)
