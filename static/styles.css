@@ -575,6 +575,10 @@ body.logged-in #account-auth-actions {
   display: none !important;
 }
 
+.logout-button[hidden] {
+  display: none !important;
+}
+
 .account-section {
   position: relative;
   border-color: #dbeafe;

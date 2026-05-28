@@ -14,6 +14,7 @@ const accountEmail = document.querySelector("#account-email");
 const accountPassword = document.querySelector("#account-password");
 const accountRegister = document.querySelector("#account-register");
 const accountLogin = document.querySelector("#account-login");
+const accountLogout = document.querySelector("#account-logout");
 const accountAuthForm = document.querySelector("#account-auth-form");
 const accountAuthActions = document.querySelector("#account-auth-actions");
 const profileName = document.querySelector("#profile-name");
@@ -613,8 +614,10 @@ function setCurrentUser(user) {
     document.body.classList.add("logged-in");
     accountAuthForm.hidden = true;
     accountAuthActions.hidden = true;
+    accountLogout.hidden = false;
     accountAuthForm.style.display = "none";
     accountAuthActions.style.display = "none";
+    accountLogout.style.display = "";
     accountPassword.value = "";
     fillAccountProfile(user.profile || {});
   } else {
@@ -623,10 +626,25 @@ function setCurrentUser(user) {
     document.body.classList.remove("logged-in");
     accountAuthForm.hidden = false;
     accountAuthActions.hidden = false;
+    accountLogout.hidden = true;
     accountAuthForm.style.display = "";
     accountAuthActions.style.display = "";
+    accountLogout.style.display = "none";
   }
   refreshHistory();
+}
+
+function logoutAccount() {
+  setCurrentUser(null);
+  accountEmail.value = "";
+  accountPassword.value = "";
+  profileName.value = "";
+  profileBirthYear.value = "";
+  if (profileSex) profileSex.value = "";
+  profileMedicalNote.value = "";
+  recordMemo.value = "";
+  accountStatus.textContent = "로그아웃되었습니다. 다시 저장하려면 로그인해 주세요.";
+  goToScreen("account");
 }
 
 function fillAccountProfile(profile) {
@@ -813,6 +831,7 @@ ocrDemo.addEventListener("click", async () => {
 
 accountRegister.addEventListener("click", registerAccount);
 accountLogin.addEventListener("click", loginAccount);
+accountLogout?.addEventListener("click", logoutAccount);
 profileSave.addEventListener("click", saveProfile);
 recordSave.addEventListener("click", saveMedicalRecord);
 document.querySelectorAll("[name^='unknown_']").forEach((input) => {
