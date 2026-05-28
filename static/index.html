@@ -146,11 +146,19 @@
 
             <article class="activity-card">
               <span class="activity-icon">👟</span>
-              <label>최근 7일 평균 걸음수 <input name="avg_steps" type="number" value="4300" /></label>
+              <label>
+                <span class="field-label">걸음수</span>
+                <input name="avg_steps" type="number" value="4300" />
+                <small class="field-help">최근 일주일 동안 하루 평균 걸음수를 적어주세요.</small>
+              </label>
             </article>
             <article class="activity-card">
               <span class="activity-icon">💪</span>
-              <label>주간 운동 횟수 <input name="exercise_per_week" type="number" value="1" /></label>
+              <label>
+                <span class="field-label">운동</span>
+                <input name="exercise_per_week" type="number" value="1" />
+                <small class="field-help">최근 일주일 동안 운동한 횟수를 적어주세요.</small>
+              </label>
             </article>
             <input name="available_minutes_per_day" type="hidden" value="15" />
 
@@ -169,11 +177,31 @@
             </div>
 
             <div class="card-grid">
-              <label>주간 아침식사 횟수 <input name="breakfast_per_week" type="number" min="0" max="7" value="3" /></label>
-              <label>주간 단 음료 <input name="sugary_drinks_per_week" type="number" value="7" /></label>
-              <label>주간 야식 <input name="late_meals_per_week" type="number" value="3" /></label>
-              <label>주간 외식 <input name="eating_out_per_week" type="number" value="5" /></label>
-              <label>수면시간 <input name="sleep_hours" type="number" step="0.5" value="6" /></label>
+              <label>
+                <span class="field-label">아침식사</span>
+                <input name="breakfast_per_week" type="number" min="0" max="7" value="3" />
+                <small class="field-help">최근 일주일 동안 아침식사를 한 횟수를 적어주세요.</small>
+              </label>
+              <label>
+                <span class="field-label">단 음료</span>
+                <input name="sugary_drinks_per_week" type="number" value="7" />
+                <small class="field-help">최근 일주일 동안 단 음료를 마신 횟수를 적어주세요.</small>
+              </label>
+              <label>
+                <span class="field-label">야식</span>
+                <input name="late_meals_per_week" type="number" value="3" />
+                <small class="field-help">최근 일주일 동안 밤늦게 먹은 횟수를 적어주세요.</small>
+              </label>
+              <label>
+                <span class="field-label">외식</span>
+                <input name="eating_out_per_week" type="number" value="5" />
+                <small class="field-help">최근 일주일 동안 외식한 횟수를 적어주세요.</small>
+              </label>
+              <label>
+                <span class="field-label">수면시간</span>
+                <input name="sleep_hours" type="number" step="0.5" value="6" />
+                <small class="field-help">최근 일주일 동안의 하루 평균 수면시간을 적어주세요.</small>
+              </label>
               <label>흡연
                 <select name="smoking">
                   <option value="never">비흡연</option>
