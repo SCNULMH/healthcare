@@ -20,6 +20,11 @@ const accountAuthActions = document.querySelector("#account-auth-actions");
 const profileName = document.querySelector("#profile-name");
 const profileBirthYear = document.querySelector("#profile-birth-year");
 const profileSex = document.querySelector("#profile-sex");
+const profileAge = document.querySelector("#profile-age");
+const profileHeightCm = document.querySelector("#profile-height-cm");
+const profileWeightKg = document.querySelector("#profile-weight-kg");
+const profileWaistCm = document.querySelector("#profile-waist-cm");
+const profileLoadBasic = document.querySelector("#profile-load-basic");
 const profileMedicalNote = document.querySelector("#profile-medical-note");
 const profileSave = document.querySelector("#profile-save");
 const recordMemo = document.querySelector("#record-memo");
@@ -641,6 +646,10 @@ function logoutAccount() {
   profileName.value = "";
   profileBirthYear.value = "";
   if (profileSex) profileSex.value = "";
+  if (profileAge) profileAge.value = "";
+  if (profileHeightCm) profileHeightCm.value = "";
+  if (profileWeightKg) profileWeightKg.value = "";
+  if (profileWaistCm) profileWaistCm.value = "";
   profileMedicalNote.value = "";
   recordMemo.value = "";
   accountStatus.textContent = "로그아웃되었습니다. 다시 저장하려면 로그인해 주세요.";
@@ -651,7 +660,26 @@ function fillAccountProfile(profile) {
   profileName.value = profile.name || "";
   profileBirthYear.value = profile.birth_year || "";
   if (profileSex) profileSex.value = profile.sex || "";
+  if (profileAge) profileAge.value = profile.age || "";
+  if (profileHeightCm) profileHeightCm.value = profile.height_cm || "";
+  if (profileWeightKg) profileWeightKg.value = profile.weight_kg || "";
+  if (profileWaistCm) profileWaistCm.value = profile.waist_cm || "";
   profileMedicalNote.value = profile.medical_note ? dedupeMedicalNote(profile.medical_note) : "";
+  updateBenchmarks();
+}
+
+function loadBasicInfoToProfile() {
+  const age = form.elements.age?.value;
+  const sex = form.elements.sex?.value;
+  const height = form.elements.height_cm?.value;
+  const weight = form.elements.weight_kg?.value;
+  const waist = form.elements.waist_cm?.value;
+  if (profileAge && age) profileAge.value = age;
+  if (profileSex && sex) profileSex.value = sex;
+  if (profileHeightCm && height) profileHeightCm.value = height;
+  if (profileWeightKg && weight) profileWeightKg.value = weight;
+  if (profileWaistCm) profileWaistCm.value = waist || "";
+  accountStatus.textContent = "기본정보 탭의 값을 개인정보 입력칸에 불러왔습니다.";
   updateBenchmarks();
 }
 
@@ -708,6 +736,10 @@ function buildProfilePayload() {
   if (profileName.value.trim()) payload.name = profileName.value.trim();
   if (profileBirthYear.value) payload.birth_year = Number(profileBirthYear.value);
   if (profileSex?.value) payload.sex = profileSex.value;
+  if (profileAge?.value) payload.age = Number(profileAge.value);
+  if (profileHeightCm?.value) payload.height_cm = Number(profileHeightCm.value);
+  if (profileWeightKg?.value) payload.weight_kg = Number(profileWeightKg.value);
+  if (profileWaistCm?.value) payload.waist_cm = Number(profileWaistCm.value);
   if (medicalNote) payload.medical_note = dedupeMedicalNote(medicalNote);
   return payload;
 }
@@ -833,6 +865,7 @@ accountRegister.addEventListener("click", registerAccount);
 accountLogin.addEventListener("click", loginAccount);
 accountLogout?.addEventListener("click", logoutAccount);
 profileSave.addEventListener("click", saveProfile);
+profileLoadBasic?.addEventListener("click", loadBasicInfoToProfile);
 recordSave.addEventListener("click", saveMedicalRecord);
 document.querySelectorAll("[name^='unknown_']").forEach((input) => {
   input.addEventListener("change", updateUnknownState);
