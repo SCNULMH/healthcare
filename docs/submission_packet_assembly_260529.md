@@ -37,18 +37,14 @@
 
 ## 4. 시제품 증빙 캡처 순서
 
-1. 홈 화면
-2. 계정 화면
-3. 기본정보 입력
-4. 검진 입력
-5. 활동/생활 입력
-6. OCR 화면
-7. 결과 기준 탭
-8. 위험도 탭
-9. 신뢰도 탭
-10. 추천 탭
-11. 저장/기록
-12. API 상태
+1. `prototype_screenshots_260529/01_home.png`: 홈 화면
+2. `prototype_screenshots_260529/02_basic_input.png`: 기본정보 입력
+3. `prototype_screenshots_260529/03_checkup_input.png`: 검진 입력
+4. `prototype_screenshots_260529/04_activity_input.png`: 활동 입력
+5. `prototype_screenshots_260529/05_lifestyle_input.png`: 생활 입력
+6. `prototype_screenshots_260529/06_analysis_result.png`: 분석 결과
+7. `prototype_screenshots_260529/07_account_screen.png`: 계정 화면
+8. `prototype_screenshots_260529/08_health_ready.png`: API 상태
 
 ## 5. 의료 안전 표현 검수
 
