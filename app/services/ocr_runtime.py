@@ -331,6 +331,18 @@ def _build_prefill_from_fields(
             status="ocr_fallback_demo",
         )
 
+    unknown_checkup_fields = [
+        field
+        for field in ("systolic_bp", "diastolic_bp", "fasting_glucose", "total_cholesterol", "hdl", "ldl", "triglyceride")
+        if field not in match_details
+    ]
+    for field in unknown_checkup_fields:
+        profile["health"][field] = None
+    profile["health"]["unknown_fields"] = unknown_checkup_fields
+    profile["health"]["bp_unknown"] = {"systolic_bp", "diastolic_bp"}.issubset(unknown_checkup_fields)
+    profile["health"]["glucose_unknown"] = "fasting_glucose" in unknown_checkup_fields
+    profile["health"]["lipid_unknown"] = {"total_cholesterol", "hdl", "ldl", "triglyceride"}.issubset(unknown_checkup_fields)
+
     return {
         "filename": document.filename,
         "content_type": document.content_type,

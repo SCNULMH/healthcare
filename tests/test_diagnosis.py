@@ -46,6 +46,10 @@ def health(**overrides):
     return HealthProfile(**base)
 
 
+def risk_by_key(risks, key):
+    return next(item for item in risks if item.key == key)
+
+
 class DiagnosisTests(unittest.TestCase):
     def test_diabetes_threshold_uses_fasting_glucose(self):
         low = evaluate_health_risks(health(fasting_glucose=125), lifestyle())[0]
@@ -70,6 +74,79 @@ class DiagnosisTests(unittest.TestCase):
         rendered = " ".join(action["detail"] for action in plan["today_actions"])
 
         self.assertTrue("10분" in rendered or "계단 1층" in rendered)
+
+    def test_all_lipid_unknown_uses_lifestyle_fallback(self):
+        risks = evaluate_health_risks(
+            health(
+                total_cholesterol=None,
+                hdl=None,
+                ldl=None,
+                triglyceride=None,
+                unknown_fields=["total_cholesterol", "hdl", "ldl", "triglyceride"],
+                lipid_unknown=True,
+            ),
+            lifestyle(eating_out_per_week=6, late_meals_per_week=4, exercise_per_week=0, avg_steps=3200),
+        )
+        dyslipidemia = risk_by_key(risks, "dyslipidemia")
+        reasons = " ".join(dyslipidemia.reasons)
+
+        self.assertIn("직접 수치 판단은 제외", reasons)
+        self.assertIn("외식", reasons)
+        self.assertIn("야식", reasons)
+        self.assertGreaterEqual(dyslipidemia.probability, 35)
+
+    def test_partial_lipid_unknown_uses_known_lipid_values_only(self):
+        risks = evaluate_health_risks(
+            health(
+                hdl=None,
+                unknown_fields=["hdl"],
+                total_cholesterol=241,
+                ldl=120,
+                triglyceride=130,
+                lipid_unknown=False,
+            ),
+            lifestyle(eating_out_per_week=1, late_meals_per_week=0, exercise_per_week=3, avg_steps=7500),
+        )
+        dyslipidemia = risk_by_key(risks, "dyslipidemia")
+        reasons = " ".join(dyslipidemia.reasons)
+
+        self.assertIn("일부 지질 수치", reasons)
+        self.assertIn("위험 범위", reasons)
+
+    def test_single_unknown_blood_pressure_still_uses_known_high_value(self):
+        risks = evaluate_health_risks(
+            health(
+                systolic_bp=145,
+                diastolic_bp=None,
+                unknown_fields=["diastolic_bp"],
+                bp_unknown=False,
+            ),
+            lifestyle(eating_out_per_week=1, drinking_per_week=0, drinking_per_month=0, drinks_per_session=0),
+        )
+        hypertension = risk_by_key(risks, "hypertension")
+
+        self.assertIn("고혈압 위험 기준", " ".join(hypertension.reasons))
+        self.assertGreaterEqual(hypertension.probability, 59)
+
+    def test_drinking_level_boundaries(self):
+        self.assertEqual(lifestyle(drinking_per_week=0, drinking_per_month=0, drinks_per_session=0).drinking_level, "none")
+        self.assertEqual(lifestyle(drinking_per_week=0, drinking_per_month=3, drinks_per_session=2).drinking_level, "light")
+        self.assertEqual(lifestyle(drinking_per_week=1, drinking_per_month=4, drinks_per_session=4).drinking_level, "moderate")
+        self.assertEqual(lifestyle(drinking_per_week=2, drinking_per_month=1, drinks_per_session=5).drinking_level, "heavy")
+
+    def test_heavy_drinking_increases_hypertension_more_than_light(self):
+        base_health = health(systolic_bp=None, diastolic_bp=None, bp_unknown=True)
+        light = risk_by_key(
+            evaluate_health_risks(base_health, lifestyle(drinking_per_week=0, drinking_per_month=2, drinks_per_session=1)),
+            "hypertension",
+        )
+        heavy = risk_by_key(
+            evaluate_health_risks(base_health, lifestyle(drinking_per_week=3, drinking_per_month=0, drinks_per_session=5)),
+            "hypertension",
+        )
+
+        self.assertGreater(heavy.probability, light.probability)
+        self.assertIn("음주", " ".join(heavy.reasons))
 
 
 if __name__ == "__main__":

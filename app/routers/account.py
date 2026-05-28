@@ -51,11 +51,13 @@ async def account_status() -> dict:
     settings = get_settings()
     return {
         "database_backend": settings.database_backend,
+        "firebase_requested": firebase_backend.is_requested(),
         "firebase_enabled": firebase_backend.is_enabled(),
         "firebase_project_id": settings.firebase_project_id,
         "firebase_web_app_id": settings.firebase_web_app_id,
-        "credential_configured": bool(settings.firebase_credentials_path or settings.firebase_credentials_json),
+        "credential_configured": firebase_backend.has_credentials(),
         "credential_source": "json_env" if settings.firebase_credentials_json else "file_path" if settings.firebase_credentials_path else "missing",
+        "fallback_backend": "sqlite" if firebase_backend.is_requested() and not firebase_backend.has_credentials() else None,
     }
 
 

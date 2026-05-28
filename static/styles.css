@@ -465,9 +465,16 @@ button {
   align-items: center;
   gap: 6px;
   width: fit-content;
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f8fafc;
+  padding: 6px 9px;
   color: var(--muted);
   font-size: 11px;
   font-weight: 900;
+  line-height: 1;
+  touch-action: manipulation;
 }
 
 .field-unknown input {
@@ -476,6 +483,7 @@ button {
   height: 15px;
   min-height: 15px;
   accent-color: var(--brand);
+  margin: 0;
   padding: 0;
 }
 
@@ -996,6 +1004,45 @@ body.logged-in #account-auth-actions {
   font-weight: 800;
 }
 
+.drinking-map {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.drinking-chip {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: white;
+  padding: 9px;
+}
+
+.drinking-chip strong,
+.drinking-chip em {
+  overflow-wrap: anywhere;
+}
+
+.drinking-chip strong {
+  color: var(--text);
+  font-size: 12px;
+}
+
+.drinking-chip em {
+  color: var(--muted);
+  font-size: 10px;
+  font-style: normal;
+  line-height: 1.35;
+}
+
+.drinking-chip.active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+
 .change-note,
 .change-panel {
   margin-top: 12px;
@@ -1405,5 +1452,25 @@ body.logged-in #account-auth-actions {
     left: 10px;
     right: 10px;
     bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .field-unknown {
+    justify-self: start;
+    min-height: 34px;
+  }
+
+  .drinking-map {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 360px) {
+  .card-grid.compact,
+  .split-inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .split-inputs > span {
+    display: none;
   }
 }

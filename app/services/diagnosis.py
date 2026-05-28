@@ -156,14 +156,22 @@ def _hypertension_risk(health: HealthProfile, lifestyle: LifestyleProfile) -> Ri
     score = 16
     reasons: list[str] = []
 
-    if health.systolic_bp is None or health.diastolic_bp is None:
+    if health.systolic_bp is None and health.diastolic_bp is None:
         reasons.append("혈압을 모름으로 표시해 혈압 직접 수치 판단은 제외했습니다.")
-    elif health.systolic_bp >= 140 or health.diastolic_bp >= 90:
+    elif (
+        (health.systolic_bp is not None and health.systolic_bp >= 140)
+        or (health.diastolic_bp is not None and health.diastolic_bp >= 90)
+    ):
         score += 43
         reasons.append("혈압이 고혈압 위험 기준 이상입니다.")
-    elif health.systolic_bp >= 130 or health.diastolic_bp >= 80:
+    elif (
+        (health.systolic_bp is not None and health.systolic_bp >= 130)
+        or (health.diastolic_bp is not None and health.diastolic_bp >= 80)
+    ):
         score += 25
         reasons.append("혈압이 주의 범위입니다.")
+    elif health.systolic_bp is None or health.diastolic_bp is None:
+        reasons.append("일부 혈압 항목을 모름으로 표시해 입력된 혈압 항목만 직접 판단했습니다.")
 
     score += _bmi_score(health, reasons)
     if lifestyle.eating_out_per_week >= 5:

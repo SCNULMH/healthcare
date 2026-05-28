@@ -7,9 +7,18 @@ from typing import Any
 from app.core.config import get_settings
 
 
-def is_enabled() -> bool:
+def is_requested() -> bool:
     settings = get_settings()
     return settings.database_backend.lower() == "firebase"
+
+
+def has_credentials() -> bool:
+    settings = get_settings()
+    return bool(settings.firebase_credentials_path or settings.firebase_credentials_json)
+
+
+def is_enabled() -> bool:
+    return is_requested() and has_credentials()
 
 
 def get_db():

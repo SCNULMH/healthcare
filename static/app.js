@@ -191,6 +191,7 @@ function renderBenchmarkSummary() {
   const context = profileContext();
   const table = benchmarkTable[context.decade] || benchmarkTable[40];
   const payload = readPayload();
+  const drinking = drinkingProfile(payload.lifestyle);
   const lipidText = payload.health.lipid_unknown
     ? "지질 수치는 모두 모름으로 표시되어 결과에서 직접 수치 비교를 제외했습니다."
     : payload.health.unknown_fields?.some((field) => lipidFields.has(field))
@@ -201,7 +202,46 @@ function renderBenchmarkSummary() {
       <strong>${context.decade}대 ${context.sexLabel} 평균 기준</strong>
       <p>혈압 ${table.systolic}/${table.diastolic}, 공복혈당 ${table.glucose}</p>
       <p>${lipidText}</p>
-      <p>음주 기준: 입력한 주간/월간 횟수와 1회 평균 잔 수를 합산해 안 함·가벼움·보통·잦음으로 내부 분류하고, 보통 이상이면 혈압 위험 점수에 반영합니다.</p>
+      <p>음주 기준: 주간 횟수×4 + 월간 추가 횟수로 월 음주 횟수를 계산하고, 1회 평균 잔 수를 함께 봅니다. 현재 입력값은 <strong>${drinking.label}</strong>입니다.</p>
+      ${renderDrinkingMap(drinking.level)}
+    </div>
+  `;
+}
+
+function drinkingProfile(lifestyle) {
+  const weekly = Number(lifestyle.drinking_per_week || 0);
+  const monthlyExtra = Number(lifestyle.drinking_per_month || 0);
+  const drinks = Number(lifestyle.drinks_per_session || 0);
+  const monthlySessions = weekly * 4 + monthlyExtra;
+  if (weekly <= 0 && monthlyExtra <= 0) {
+    return { level: "none", label: "안 함", monthlySessions, drinks };
+  }
+  if (monthlySessions <= 3 && drinks <= 2) {
+    return { level: "light", label: "가벼움", monthlySessions, drinks };
+  }
+  if (monthlySessions <= 8 && drinks <= 4) {
+    return { level: "moderate", label: "보통", monthlySessions, drinks };
+  }
+  return { level: "heavy", label: "잦음", monthlySessions, drinks };
+}
+
+function renderDrinkingMap(activeLevel) {
+  const levels = [
+    ["none", "안 함", "월 0회"],
+    ["light", "가벼움", "월 1~3회 · 2잔 이하"],
+    ["moderate", "보통", "월 4~8회 또는 4잔 이하"],
+    ["heavy", "잦음", "월 9회 이상 또는 5잔 이상"],
+  ];
+  return `
+    <div class="drinking-map" aria-label="음주 입력값 변환 기준">
+      ${levels
+        .map(([level, label, rule]) => `
+          <span class="drinking-chip ${level === activeLevel ? "active" : ""}">
+            <strong>${label}</strong>
+            <em>${rule}</em>
+          </span>
+        `)
+        .join("")}
     </div>
   `;
 }
@@ -217,6 +257,7 @@ function updateUnknownState() {
 }
 
 function fillForm(payload) {
+  const unknownFields = new Set(payload?.health?.unknown_fields || []);
   for (const values of Object.values(payload)) {
     if (!values || typeof values !== "object") continue;
     for (const [key, value] of Object.entries(values)) {
@@ -229,6 +270,13 @@ function fillForm(payload) {
       }
     }
   }
+  if (unknownFields.size) {
+    unknownableHealthFields.forEach((field) => {
+      const input = form.elements[`unknown_${field}`];
+      if (input) input.checked = unknownFields.has(field);
+    });
+  }
+  updateUnknownState();
 }
 
 function renderLoading() {

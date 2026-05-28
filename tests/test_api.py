@@ -1,9 +1,12 @@
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings
 from app.main import app
+from app.services import firebase_backend
 from app.services.ocr_runtime import UploadedDocument, _build_prefill_from_fields
 from app.services.public_data import map_checkup_row_to_risk_payload
 
@@ -31,6 +34,29 @@ class RiskApiTests(unittest.TestCase):
         payload = response.json()
         self.assertEqual(payload["status"], "ok")
         self.assertIn("public_data_key_configured", payload)
+
+    def test_account_status_reports_firebase_fallback_safely(self):
+        response = self.client.get("/account/status")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("firebase_requested", payload)
+        self.assertIn("firebase_enabled", payload)
+        self.assertIn("credential_configured", payload)
+        if payload["database_backend"] == "firebase" and not payload["credential_configured"]:
+            self.assertEqual(payload["fallback_backend"], "sqlite")
+
+    def test_firebase_backend_disables_without_credentials(self):
+        fake_settings = SimpleNamespace(
+            database_backend="firebase",
+            firebase_credentials_path=None,
+            firebase_credentials_json=None,
+        )
+
+        with patch("app.services.firebase_backend.get_settings", return_value=fake_settings):
+            self.assertTrue(firebase_backend.is_requested())
+            self.assertFalse(firebase_backend.has_credentials())
+            self.assertFalse(firebase_backend.is_enabled())
 
     def test_public_data_status_is_safe_without_key(self):
         response = self.client.get("/health/public-data")
@@ -105,6 +131,29 @@ class RiskApiTests(unittest.TestCase):
         dyslipidemia = next(item for item in payload["risks"] if item["key"] == "dyslipidemia")
         self.assertTrue(any("직접 수치 판단" in reason for reason in dyslipidemia["reasons"]))
 
+    def test_prediction_accepts_partial_unknown_lipid_values(self):
+        demo = self.client.get("/risk/demo").json()
+        demo["health"].update({"hdl": None, "unknown_fields": ["hdl"]})
+
+        response = self.client.post("/risk/predict", json=demo)
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("HDL", " ".join(payload["input_notes"]))
+        dyslipidemia = next(item for item in payload["risks"] if item["key"] == "dyslipidemia")
+        self.assertTrue(any("일부 지질 수치" in reason for reason in dyslipidemia["reasons"]))
+
+    def test_prediction_uses_known_blood_pressure_when_one_field_unknown(self):
+        demo = self.client.get("/risk/demo").json()
+        demo["health"].update({"systolic_bp": 145, "diastolic_bp": None, "unknown_fields": ["diastolic_bp"]})
+
+        response = self.client.post("/risk/predict", json=demo)
+        payload = response.json()
+
+        self.assertEqual(response.status_code, 200)
+        hypertension = next(item for item in payload["risks"] if item["key"] == "hypertension")
+        self.assertTrue(any("고혈압 위험 기준" in reason for reason in hypertension["reasons"]))
+
     def test_save_result_stores_anonymous_history_and_compares(self):
         demo = self.client.get("/risk/demo").json()
         demo["client_id"] = "test-client-history"
@@ -167,6 +216,7 @@ class RiskApiTests(unittest.TestCase):
         self.assertEqual(payload["prefill"]["health"]["sex"], "male")
         self.assertEqual(payload["prefill"]["health"]["height_cm"], 172)
         self.assertEqual(payload["prefill"]["health"]["fasting_glucose"], 132)
+        self.assertIn("ldl", payload["prefill"]["health"]["unknown_fields"])
         self.assertIn("공복혈당", payload["extracted_fields"])
 
     def test_ocr_result_ai_matches_raw_text_lines(self):
@@ -193,6 +243,7 @@ class RiskApiTests(unittest.TestCase):
         self.assertEqual(payload["prefill"]["health"]["diastolic_bp"], 86)
         self.assertEqual(payload["prefill"]["health"]["fasting_glucose"], 128)
         self.assertEqual(payload["prefill"]["health"]["triglyceride"], 185)
+        self.assertEqual(payload["prefill"]["health"]["unknown_fields"], [])
         self.assertIn("match_details", payload)
 
     def test_ocr_result_ai_matches_table_rows(self):
@@ -212,6 +263,7 @@ class RiskApiTests(unittest.TestCase):
         self.assertEqual(payload["prefill"]["health"]["diastolic_bp"], 88)
         self.assertEqual(payload["prefill"]["health"]["hdl"], 47)
         self.assertEqual(payload["prefill"]["health"]["ldl"], 141)
+        self.assertIn("fasting_glucose", payload["prefill"]["health"]["unknown_fields"])
 
 
 if __name__ == "__main__":
