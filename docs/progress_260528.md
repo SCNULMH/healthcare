@@ -27,6 +27,14 @@
 - `scripts/repo_map.py`로 긴 Python 파일 전체 조회 대신 class/function map 확인 가능
 - `docs/harness_architecture.md`, `docs/chat/chat_260528.md`에 하네스 설계와 진행 기록 추가
 
+### 제출서류 작성 준비
+
+- `서류/` 공고문과 제출 양식 HWP/PDF를 Markdown으로 추출
+- 사업계획서 양식 기준 1~6번 문항 구조 확인
+- 제품 및 서비스 개발 부문 기준으로 제출 문구 작성 시작
+- `docs/submission_answer_draft_260528.md`에 참가신청서/사업계획서/시제품 증빙 문구 초안 작성
+- `docs/submission_fill_checklist_260528.md`에 직접 기입 항목, 평가기준 대응, 캡처 목록 정리
+
 ### 계정/개인정보
 
 - Firebase 기반 계정 생성, 로그인, 프로필 저장 흐름 구현
