@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import base64
+import json
 import os
 import sqlite3
 from datetime import datetime, timezone
@@ -29,6 +31,38 @@ def _hash_password(password: str, salt: str | None = None) -> tuple[str, str]:
 def _verify_password(password: str, salt: str, password_hash: str) -> bool:
     _, candidate = _hash_password(password, salt)
     return hmac.compare_digest(candidate, password_hash)
+
+
+def create_session_token(user_id: str) -> str:
+    settings = get_settings()
+    issued_at = int(datetime.now(timezone.utc).timestamp())
+    payload = {"user_id": user_id, "iat": issued_at}
+    encoded = base64.urlsafe_b64encode(json.dumps(payload, separators=(",", ":")).encode("utf-8")).decode("ascii")
+    signature = hmac.new(settings.session_secret.encode("utf-8"), encoded.encode("ascii"), hashlib.sha256).hexdigest()
+    return f"{encoded}.{signature}"
+
+
+def verify_session_token(user_id: str, token: str | None) -> bool:
+    if not token or "." not in token:
+        return False
+    settings = get_settings()
+    encoded, signature = token.rsplit(".", 1)
+    expected = hmac.new(settings.session_secret.encode("utf-8"), encoded.encode("ascii"), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        return False
+    try:
+        payload = json.loads(base64.urlsafe_b64decode(encoded.encode("ascii")).decode("utf-8"))
+    except (ValueError, json.JSONDecodeError):
+        return False
+    if payload.get("user_id") != user_id:
+        return False
+    issued_at = int(payload.get("iat") or 0)
+    now = int(datetime.now(timezone.utc).timestamp())
+    return issued_at > 0 and now - issued_at <= settings.session_ttl_seconds
+
+
+def with_session_token(user: dict[str, Any]) -> dict[str, Any]:
+    return {**user, "session_token": create_session_token(user["user_id"])}
 
 
 def _connect() -> sqlite3.Connection:
@@ -87,8 +121,6 @@ def create_user(email: str, password: str, profile: dict[str, Any]) -> dict[str,
         firebase_backend.save_user(user_id, payload)
         return _public_user(payload)
 
-    import json
-
     conn = _connect()
     try:
         with conn:
@@ -122,8 +154,6 @@ def login(email: str, password: str) -> dict[str, Any]:
             raise ValueError("이메일 또는 비밀번호가 맞지 않습니다.")
         return _public_user(user)
 
-    import json
-
     row = _connect().execute("SELECT * FROM users WHERE email = ?", (normalized,)).fetchone()
     if not row or not _verify_password(password, row["password_salt"], row["password_hash"]):
         raise ValueError("이메일 또는 비밀번호가 맞지 않습니다.")
@@ -138,8 +168,6 @@ def get_profile(user_id: str) -> dict[str, Any] | None:
     if firebase_backend.is_enabled():
         user = firebase_backend.get_user(user_id)
         return _public_user(user) if user else None
-
-    import json
 
     row = _connect().execute("SELECT * FROM users WHERE user_id = ?", (user_id,)).fetchone()
     if not row:
@@ -158,8 +186,6 @@ def update_profile(user_id: str, profile: dict[str, Any]) -> dict[str, Any]:
     if firebase_backend.is_enabled():
         firebase_backend.save_user(user_id, {"profile": merged, "updated_at": _now()})
         return {"user_id": user_id, "email": user["email"], "profile": merged}
-
-    import json
 
     with _connect() as conn:
         conn.execute(

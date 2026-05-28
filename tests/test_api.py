@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from app.core.config import Settings
 from app.main import app
 from app.services import firebase_backend
+from app.services.account_store import create_session_token
 from app.services.ocr_runtime import UploadedDocument, _build_prefill_from_fields
 from app.services.public_data import map_checkup_row_to_risk_payload
 
@@ -154,29 +155,52 @@ class RiskApiTests(unittest.TestCase):
         hypertension = next(item for item in payload["risks"] if item["key"] == "hypertension")
         self.assertTrue(any("고혈압 위험 기준" in reason for reason in hypertension["reasons"]))
 
-    def test_save_result_stores_anonymous_history_and_compares(self):
+    def test_save_result_requires_login_token(self):
         demo = self.client.get("/risk/demo").json()
-        demo["client_id"] = "test-client-history"
+        prediction = self.client.post("/risk/predict", json=demo).json()
+
+        response = self.client.post(
+            "/risk/save-result",
+            json={**demo, "bmi": prediction["bmi"], "risks": prediction["risks"], "plan": prediction["plan"]},
+        )
+
+        self.assertEqual(response.status_code, 401)
+        self.assertIn("로그인", response.json()["detail"])
+
+    def test_save_result_stores_authenticated_history_and_compares(self):
+        user_id = "test-client-history"
+        token = create_session_token(user_id)
+        demo = self.client.get("/risk/demo").json()
+        demo["client_id"] = user_id
 
         first_prediction = self.client.post("/risk/predict", json=demo).json()
         first = self.client.post(
             "/risk/save-result",
-            json={**demo, "bmi": first_prediction["bmi"], "risks": first_prediction["risks"], "plan": first_prediction["plan"]},
+            json={
+                **demo,
+                "user_id": user_id,
+                "session_token": token,
+                "bmi": first_prediction["bmi"],
+                "risks": first_prediction["risks"],
+                "plan": first_prediction["plan"],
+            },
         )
         second_payload = self.client.get("/risk/demo").json()
-        second_payload["client_id"] = "test-client-history"
+        second_payload["client_id"] = user_id
         second_payload["health"]["fasting_glucose"] = 99
         second_prediction = self.client.post("/risk/predict", json=second_payload).json()
         second = self.client.post(
             "/risk/save-result",
             json={
                 **second_payload,
+                "user_id": user_id,
+                "session_token": token,
                 "bmi": second_prediction["bmi"],
                 "risks": second_prediction["risks"],
                 "plan": second_prediction["plan"],
             },
         )
-        history = self.client.get("/risk/history/test-client-history")
+        history = self.client.get(f"/risk/history/{user_id}")
 
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 200)

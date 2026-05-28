@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     firebase_credentials_json: str | None = None
     firebase_project_id: str | None = None
     firebase_web_app_id: str | None = None
+    session_secret: str = "dev-reset-coach-session-secret"
+    session_ttl_seconds: int = 604800
     risk_model_mode: str = "auto"
     risk_model_path: str = "models/risk_models.joblib"
     ocr_provider: str = "demo"

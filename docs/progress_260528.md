@@ -30,9 +30,11 @@
 ### 계정/개인정보
 
 - Firebase 기반 계정 생성, 로그인, 프로필 저장 흐름 구현
+- 로그인/가입 응답에 서버 서명 세션 토큰 발급
 - 로그인 성공 시 아이디/비밀번호 입력창 숨김
 - 로그아웃 버튼 추가
 - 로그인하지 않은 상태에서 진단결과 저장 시 저장을 막고 로그인 안내
+- `/risk/save-result`도 `user_id + session_token` 없이는 저장하지 않도록 서버단 인증 강화
 - 개인정보 입력 항목 확장:
   - 이름
   - 출생연도
@@ -111,6 +113,7 @@
 - 모델이 사용 가능하면 학습 모델을 사용하고, 검진 핵심값이 `모름`이면 설명 가능한 규칙 기반 엔진으로 fallback
 - 신뢰도/평균 비교 카드 유지
 - Firebase는 `DATABASE_BACKEND=firebase`인데 credential이 없으면 앱이 즉시 뻗지 않도록 sqlite fallback 상태를 노출
+- Render 환경변수에 `SESSION_SECRET`, `SESSION_TTL_SECONDS` 추가
 
 ## 최근 커밋 기록
 

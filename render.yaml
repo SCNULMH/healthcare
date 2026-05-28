@@ -33,6 +33,10 @@ services:
         value: checkup-70a1e
       - key: FIREBASE_WEB_APP_ID
         value: 1:605150906055:web:6021dd1c404c7739cde0e2
+      - key: SESSION_SECRET
+        sync: false
+      - key: SESSION_TTL_SECONDS
+        value: "604800"
       - key: RISK_MODEL_MODE
         value: auto
       - key: RISK_MODEL_PATH

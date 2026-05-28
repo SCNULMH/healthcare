@@ -10,15 +10,10 @@
     "OCR 결과 자동 입력 및 읽지 못한 항목 모름 자동 연동",
     "음주 주간/월간/잔 수 입력과 내부 등급 변환 구현",
     "결과 탭, 평균 비교, 신뢰도 카드, 생활요인 기준 표시 구현",
-    "결측치, 음주 변환, Firebase credential fallback 테스트 추가"
+    "결측치, 음주 변환, Firebase credential fallback 테스트 추가",
+    "진단결과 저장 API에 서버 서명 세션 토큰 검증 추가"
   ],
   "remaining": [
-    {
-      "id": "T001",
-      "title": "서버단 저장 인증 강화",
-      "detail": "/risk/save-result에 Firebase ID token 또는 세션 토큰 검증 추가",
-      "priority": "high"
-    },
     {
       "id": "T002",
       "title": "Render 실배포 점검",

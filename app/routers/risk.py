@@ -13,6 +13,7 @@ from app.services.diagnosis import (
 )
 from app.services.model_runtime import model_performance_summary, model_status, predict_with_model, should_use_model
 from app.services.history import get_history, save_analysis
+from app.services import account_store
 from app.services.ocr_runtime import (
     OcrRuntimeError,
     demo_ocr_result,
@@ -68,6 +69,8 @@ class SaveResultRequest(RiskRequest):
     bmi: float
     risks: list[dict]
     plan: dict
+    user_id: str | None = Field(default=None, min_length=8, max_length=80)
+    session_token: str | None = Field(default=None, min_length=20, max_length=500)
 
 
 @router.get("/demo")
@@ -104,6 +107,10 @@ async def read_history(client_id: str, limit: int = 5) -> dict:
 
 @router.post("/save-result")
 async def save_result(payload: SaveResultRequest) -> dict:
+    if not payload.user_id or not account_store.verify_session_token(payload.user_id, payload.session_token):
+        raise HTTPException(status_code=401, detail="로그인 후 진단결과를 저장할 수 있습니다.")
+    if payload.client_id != payload.user_id:
+        raise HTTPException(status_code=403, detail="로그인 사용자와 저장 대상이 일치하지 않습니다.")
     comparison = save_analysis(
         client_id=payload.client_id,
         bmi=payload.bmi,

@@ -67,7 +67,7 @@ async def register(payload: RegisterPayload) -> dict:
         user = account_store.create_user(payload.email, payload.password, payload.profile.model_dump(exclude_none=True))
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
-    return {"status": "created", "user": user}
+    return {"status": "created", "user": account_store.with_session_token(user)}
 
 
 @router.post("/login")
@@ -76,7 +76,7 @@ async def login(payload: LoginPayload) -> dict:
         user = account_store.login(payload.email, payload.password)
     except ValueError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
-    return {"status": "ok", "user": user}
+    return {"status": "ok", "user": account_store.with_session_token(user)}
 
 
 @router.get("/profile/{user_id}")

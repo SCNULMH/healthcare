@@ -509,6 +509,8 @@ async function saveLatestAnalysis() {
     status.textContent = "진단결과를 저장하는 중입니다.";
     const payload = {
       client_id: activeClientId,
+      user_id: currentUser.user_id,
+      session_token: currentUser.session_token,
       health: readPayload().health,
       lifestyle: readPayload().lifestyle,
       bmi: latestAnalysis.bmi,
@@ -807,7 +809,7 @@ async function saveProfile() {
   }
   try {
     const data = await accountRequest(`/account/profile/${currentUser.user_id}`, buildProfilePayload(), "PUT");
-    setCurrentUser(data.user);
+    setCurrentUser({ ...data.user, session_token: currentUser.session_token });
     accountStatus.textContent = "개인정보를 저장했습니다.";
   } catch (error) {
     accountStatus.textContent = error.message;
