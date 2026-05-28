@@ -17,6 +17,16 @@
 
 ## 완료된 주요 기능
 
+### 하네스/컨텍스트 관리
+
+- 의료 앱 전용 `AGENTS.md` 추가
+- `.codex/AGENTS.md`를 의료 공모전 기준으로 교체
+- `.codex/hooks.json`을 repo-local hook runner 기준으로 정리
+- `TODO.json`에 현재 목표, 완료 항목, 남은 작업을 기계 판독용으로 기록
+- `챗`, `챗 기록`, `저장` macro command 규칙 정의
+- `scripts/repo_map.py`로 긴 Python 파일 전체 조회 대신 class/function map 확인 가능
+- `docs/harness_architecture.md`, `docs/chat/chat_260528.md`에 하네스 설계와 진행 기록 추가
+
 ### 계정/개인정보
 
 - Firebase 기반 계정 생성, 로그인, 프로필 저장 흐름 구현

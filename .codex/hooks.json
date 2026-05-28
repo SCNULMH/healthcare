@@ -1,0 +1,75 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/harness_context.py session_start",
+            "statusMessage": "Loading git and TODO context"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/harness_context.py user_prompt_submit",
+            "statusMessage": "Applying project prompt reminders"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|shell_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/harness_context.py pre_tool_use",
+            "statusMessage": "Checking command safety"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash|shell_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/harness_context.py pre_tool_use",
+            "statusMessage": "Checking approval safety"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|shell_command|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/harness_context.py post_tool_use",
+            "statusMessage": "Reviewing output size"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python scripts/harness_context.py stop",
+            "timeout": 30,
+            "statusMessage": "Appending continuity note"
+          }
+        ]
+      }
+    ]
+  }
+}

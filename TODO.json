@@ -1,0 +1,46 @@
+{
+  "project": "검진AI 리셋코치",
+  "updated_at": "2026-05-28",
+  "active_goal": "의료 공모전 제출용 웹앱 완성도 보강 및 Render/Firebase 배포 준비",
+  "status": "in_progress",
+  "done": [
+    "Firebase 계정 생성, 로그인, 로그아웃, 프로필 저장 흐름 구현",
+    "진단결과 수동 저장 버튼 및 비로그인 저장 차단 구현",
+    "검진 항목별 모름 체크와 지질 fallback 로직 구현",
+    "OCR 결과 자동 입력 및 읽지 못한 항목 모름 자동 연동",
+    "음주 주간/월간/잔 수 입력과 내부 등급 변환 구현",
+    "결과 탭, 평균 비교, 신뢰도 카드, 생활요인 기준 표시 구현",
+    "결측치, 음주 변환, Firebase credential fallback 테스트 추가"
+  ],
+  "remaining": [
+    {
+      "id": "T001",
+      "title": "서버단 저장 인증 강화",
+      "detail": "/risk/save-result에 Firebase ID token 또는 세션 토큰 검증 추가",
+      "priority": "high"
+    },
+    {
+      "id": "T002",
+      "title": "Render 실배포 점검",
+      "detail": "FIREBASE_CREDENTIALS_JSON, PUBLIC_DATA_SERVICE_KEY, OPENAI_API_KEY 환경변수 설정 후 health/account/OCR 확인",
+      "priority": "high"
+    },
+    {
+      "id": "T003",
+      "title": "모바일 UI 최종 캡처",
+      "detail": "검진 모름 체크박스, 결과 탭, 로그인 후 폼 숨김, 저장 기록 화면 확인",
+      "priority": "medium"
+    },
+    {
+      "id": "T004",
+      "title": "제출 문서 보강",
+      "detail": "결측치 fallback, OCR 비저장, Firebase 보안 흐름, 모델 신뢰도 설명을 사업계획서 문장으로 정리",
+      "priority": "medium"
+    }
+  ],
+  "macro_rules": {
+    "챗": "latest chat log tail을 읽고 이전 기록 및 남은 작업을 이어서 수행",
+    "챗 기록": "현재 진행상황, 변경 파일, 테스트, blocker, 다음 작업을 docs/chat/chat_YYMMDD.md에 append",
+    "저장": "검증 후 commit/push"
+  }
+}
