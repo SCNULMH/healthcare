@@ -138,7 +138,7 @@ def _comparison(previous: sqlite3.Row | None, primary: dict[str, Any], bmi: floa
     if previous is None:
         return {
             "status": "first_record",
-            "message": "첫 분석 결과를 저장했습니다. 다음 분석부터 이전 값 대비 변화를 보여줍니다.",
+            "message": "첫 결과를 저장했습니다. 다음 결과부터 변화도 함께 보여드릴게요.",
         }
     risk_delta = int(primary["probability"]) - int(previous["primary_risk_probability"])
     bmi_delta = round(bmi - float(previous["bmi"]), 1)
@@ -170,13 +170,13 @@ def _firebase_history_item(item: dict[str, Any]) -> dict[str, Any]:
 
 def _comparison_message(risk_delta: int, bmi_delta: float) -> str:
     if risk_delta < 0:
-        return f"이전 분석보다 주요 위험도가 {abs(risk_delta)}%p 낮아졌습니다."
+        return f"이전 결과보다 주요 위험 신호가 {abs(risk_delta)}%p 낮아졌습니다."
     if risk_delta > 0:
-        return f"이전 분석보다 주요 위험도가 {risk_delta}%p 높아졌습니다. 오늘의 개선 행동부터 다시 시작하세요."
+        return f"이전 결과보다 주요 위험 신호가 {risk_delta}%p 높아졌습니다. 오늘의 작은 행동부터 다시 시작해보세요."
     if bmi_delta != 0:
         sign = "낮아졌습니다" if bmi_delta < 0 else "높아졌습니다"
         return f"주요 위험도는 유지됐고 BMI는 {abs(bmi_delta)} {sign}."
-    return "이전 분석과 주요 위험도가 비슷합니다. 작은 습관을 유지하는 것이 좋습니다."
+    return "이전 결과와 비슷합니다. 지금의 작은 습관을 이어가면 좋습니다."
 
 
 def _row_to_item(row: sqlite3.Row) -> dict[str, Any]:

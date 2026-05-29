@@ -105,7 +105,7 @@ class RiskApiTests(unittest.TestCase):
         self.assertIn("ai_explanation", payload)
         self.assertIn("engine", payload)
         self.assertIn("reliability", payload)
-        self.assertEqual(payload["ai_explanation"]["title"], "AI가 이렇게 판단했어요")
+        self.assertEqual(payload["ai_explanation"]["title"], "이렇게 계산했어요")
         self.assertEqual(len(payload["ai_explanation"]["steps"]), 3)
         self.assertIn("criteria", payload["ai_explanation"])
         self.assertLessEqual(len(payload["plan"]["today_actions"]), 2)

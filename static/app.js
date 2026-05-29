@@ -283,7 +283,7 @@ function renderLoading() {
   result.innerHTML = `
     <div class="analysis-panel">
       <div class="analysis-topbar">
-        <strong>분석 엔진</strong>
+        <strong>분석 중</strong>
         <span class="live-pill"><i></i> LIVE</span>
       </div>
       <div class="analysis-hero">
@@ -390,13 +390,13 @@ function render(data) {
         <div class="score-ring" style="--value:${primaryRisk.probability}%">
           <div>${primaryRisk.probability}</div>
         </div>
-        <h2>${primaryRisk.label} 가능성이 가장 크게 예측되었습니다.</h2>
+        <h2>${primaryRisk.label} 신호가 가장 크게 나타났습니다.</h2>
         <p>${primaryRisk.summary} BMI ${data.bmi}와 검진 수치, 생활패턴을 함께 반영했습니다.</p>
-        <p class="engine-note">예측 엔진: ${data.engine?.mode || "rule"} · ${data.engine?.message || "설명 가능한 규칙 기반 AI 엔진을 사용했습니다."}</p>
+        <p class="engine-note">분석 방식: ${data.engine?.mode || "rule"} · ${data.engine?.message || "검진 기준과 생활패턴 기준을 함께 적용했습니다."}</p>
         ${inputNotes}
         ${renderBenchmarkSummary()}
         ${comparison}
-        <button id="save-analysis" class="primary wide save-analysis-button" type="button">진단결과 저장</button>
+        <button id="save-analysis" class="primary wide save-analysis-button" type="button">분석 결과 저장</button>
         <p id="save-analysis-status" class="muted save-analysis-status">저장 버튼을 누를 때만 이전 기록에 반영됩니다.</p>
       </div>
     </div>
@@ -412,7 +412,7 @@ function render(data) {
     <div id="result-carousel" class="result-carousel" aria-label="검진 결과 탭">
       <section id="result-panel-criteria" class="result-section result-panel ai-explain-section">
       <div class="screen-heading">
-        <h2>${data.ai_explanation?.title || "AI가 이렇게 판단했어요"}</h2>
+        <h2>${data.ai_explanation?.title || "이렇게 계산했어요"}</h2>
         <p>${data.ai_explanation?.model_note || ""}</p>
       </div>
       <div class="ai-step-list">${aiExplanation}</div>
@@ -421,7 +421,7 @@ function render(data) {
 
       <section id="result-panel-risks" class="result-section result-panel">
       <div class="screen-heading">
-        <h2>AI 질환별 위험도</h2>
+        <h2>질환별 위험 신호</h2>
         <p>${data.disclaimer}</p>
       </div>
       <div class="risk-list">${risks}</div>
@@ -431,7 +431,7 @@ function render(data) {
 
       <section id="result-panel-actions" class="result-section result-panel">
       <div class="screen-heading">
-        <h2>AI 개인화 추천</h2>
+        <h2>내 프로필 맞춤 행동</h2>
         <p>${data.plan.title}</p>
       </div>
       <div class="action-list">${actions}</div>
@@ -501,12 +501,12 @@ async function saveLatestAnalysis() {
   const status = document.querySelector("#save-analysis-status");
   if (!latestAnalysis) return;
   if (!currentUser) {
-    status.textContent = "로그인 후 진단결과를 저장할 수 있습니다. 오른쪽 위 계정 아이콘에서 로그인해 주세요.";
+    status.textContent = "로그인하면 분석 결과를 저장할 수 있습니다. 오른쪽 위 계정 아이콘에서 로그인해 주세요.";
     goToScreen("account");
     return;
   }
   try {
-    status.textContent = "진단결과를 저장하는 중입니다.";
+    status.textContent = "분석 결과를 저장하는 중입니다.";
     const payload = {
       client_id: activeClientId,
       user_id: currentUser.user_id,
@@ -525,7 +525,7 @@ async function saveLatestAnalysis() {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.detail || "저장에 실패했습니다.");
     latestAnalysis.comparison = data.comparison;
-    status.textContent = data.comparison?.message || "진단결과를 저장했습니다.";
+    status.textContent = data.comparison?.message || "분석 결과를 저장했습니다.";
     const button = document.querySelector("#save-analysis");
     button.disabled = true;
     button.textContent = "저장 완료";
@@ -561,8 +561,8 @@ function renderReliability(reliability) {
   return `
     <section id="result-panel-reliability" class="result-section result-panel reliability-section">
       <div class="screen-heading">
-        <h2>신뢰도와 평균 비교</h2>
-        <p>입력값 완성도 ${reliability.input_completeness}% · 예측 엔진 ${reliability.engine_mode}</p>
+        <h2>입력 완성도와 평균 비교</h2>
+        <p>입력값 완성도 ${reliability.input_completeness}% · 분석 방식 ${reliability.engine_mode}</p>
       </div>
       <div class="reliability-list">${cards}</div>
       <p class="muted reliability-caution">${reliability.caution}</p>

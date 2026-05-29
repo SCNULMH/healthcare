@@ -82,7 +82,7 @@ async def get_demo() -> dict:
 async def get_metadata() -> dict:
     return {
         "product": "검진AI 리셋코치",
-        "disclaimer": "이 서비스는 의료 진단이 아니라 건강검진 기반 예방관리 참고 정보입니다.",
+        "disclaimer": "이 서비스는 진단이 아니라 건강검진을 이해하기 위한 참고 정보입니다.",
         "targets": ["고혈압 위험군", "당뇨 위험군", "이상지질혈증 위험군"],
         "principles": [
             "하루 1~2개의 작은 행동만 제안합니다.",
@@ -92,10 +92,10 @@ async def get_metadata() -> dict:
         "model": model_status(),
         "ocr": ocr_status(get_settings()),
         "roadmap": [
-            "MVP: 건강검진 수치와 걸음수 수동 입력",
-            "Next: 검진 결과지 OCR 업로드",
-            "Future: iOS HealthKit, Android Health Connect 사용자 동의 연동",
-            "Future: 건강정보고속도로/의료 마이데이터 기반 검진 내역 연동",
+            "현재: 건강검진 수치와 걸음수 직접 입력",
+            "다음: 검진 결과지 자동입력",
+            "향후: iOS HealthKit, Android Health Connect 사용자 동의 연동",
+            "향후: 건강정보고속도로/의료 마이데이터 기반 검진 내역 연동",
         ],
     }
 
@@ -108,7 +108,7 @@ async def read_history(client_id: str, limit: int = 5) -> dict:
 @router.post("/save-result")
 async def save_result(payload: SaveResultRequest) -> dict:
     if not payload.user_id or not account_store.verify_session_token(payload.user_id, payload.session_token):
-        raise HTTPException(status_code=401, detail="로그인 후 진단결과를 저장할 수 있습니다.")
+        raise HTTPException(status_code=401, detail="로그인 후 분석 결과를 저장할 수 있습니다.")
     if payload.client_id != payload.user_id:
         raise HTTPException(status_code=403, detail="로그인 사용자와 저장 대상이 일치하지 않습니다.")
     comparison = save_analysis(
@@ -124,25 +124,25 @@ async def save_result(payload: SaveResultRequest) -> dict:
 
 def _ai_explanation() -> dict:
     return {
-        "title": "AI가 이렇게 판단했어요",
+        "title": "이렇게 계산했어요",
         "steps": [
             {
-                "title": "위험도 예측",
-                "description": "건강검진 수치와 생활패턴을 함께 분석해 고혈압·당뇨·이상지질혈증 위험도를 계산합니다.",
+                "title": "위험 신호 확인",
+                "description": "건강검진 수치와 생활패턴을 함께 보고 고혈압·당뇨·이상지질혈증 신호를 계산합니다.",
             },
             {
-                "title": "위험 요인 설명",
-                "description": "공복혈당, 혈압, BMI, 걸음수처럼 위험도를 높인 요인을 쉬운 말로 풀어줍니다.",
+                "title": "이유 정리",
+                "description": "공복혈당, 혈압, BMI, 걸음수처럼 결과에 영향을 준 값을 쉬운 말로 정리합니다.",
             },
             {
-                "title": "개인 맞춤 개선 플랜",
-                "description": "사용자의 생활패턴과 실천 제약을 반영해 하루 1~2개의 작은 행동으로 바꿉니다.",
+                "title": "내 프로필 맞춤 행동",
+                "description": "입력한 생활패턴을 바탕으로 오늘 해볼 만한 행동 1~2개만 제안합니다.",
             },
         ],
         "model_note": (
-            "당뇨·고혈압은 공공데이터 기준값 라벨로 학습한 모델을 우선 사용하고, "
-            "이상지질혈증과 생활습관 영향은 설명 가능한 규칙 엔진으로 보강합니다. "
-            "모델 모드에서는 공복혈당·혈압 같은 검진값이 가장 크게 반영되므로, 작은 생활값 변화는 행동 영향표에서 별도로 확인합니다."
+            "당뇨·고혈압은 공공데이터 기준으로 만든 학습 모델을 사용할 수 있고, "
+            "이상지질혈증과 생활습관 영향은 기준표를 함께 적용합니다. "
+            "공복혈당·혈압 같은 검진값이 크게 반영되며, 생활습관 변화는 행동 영향표에서 따로 확인할 수 있습니다."
         ),
         "criteria": [
             {"name": "당뇨", "primary": "공복혈당 100 이상 주의, 126 이상 위험", "lifestyle": "단 음료 주 5회 이상, 운동 주 1회 이하, 5,000보 미만이면 가중"},
@@ -257,17 +257,17 @@ async def predict_risk(payload: RiskRequest) -> dict:
     engine = {
         "mode": "rule",
         "status": "used",
-        "message": "설명 가능한 규칙 기반 AI 엔진을 사용했습니다.",
+        "message": "검진 기준과 생활패턴 기준을 함께 적용했습니다.",
     }
     has_unknown_core = health.bp_unknown or health.glucose_unknown or health.lipid_unknown
     if should_use_model() and has_unknown_core:
         engine = {
             "mode": "rule",
             "status": "used_unknown_checkup",
-            "message": "일부 검진 수치가 정확하지 않아 학습 모델 대신 설명 가능한 규칙 기반 엔진으로 분석했습니다.",
-            "message": "지질 수치가 정확하지 않아 학습 모델 대신 설명 가능한 규칙 기반 엔진으로 분석했습니다.",
+            "message": "일부 검진 수치가 없어 학습 모델 대신 검진 기준과 생활패턴 기준으로 계산했습니다.",
+            "message": "지질 수치가 없어 학습 모델 대신 검진 기준과 생활패턴 기준으로 계산했습니다.",
         }
-        engine["message"] = "일부 검진 수치가 정확하지 않아 학습 모델 대신 설명 가능한 규칙 기반 엔진으로 분석했습니다."
+        engine["message"] = "일부 검진 수치가 없어 학습 모델 대신 검진 기준과 생활패턴 기준으로 계산했습니다."
     elif should_use_model():
         try:
             risks, engine = predict_with_model(health, lifestyle, risks)
@@ -277,7 +277,7 @@ async def predict_risk(payload: RiskRequest) -> dict:
     bmi = round(health.bmi, 1)
     risk_dicts = [risk.to_dict() for risk in risks]
     return {
-        "disclaimer": "예측 결과는 진단이 아니며, 정확한 판단과 치료는 의료진 상담이 필요합니다.",
+        "disclaimer": "이 결과는 진단이 아니며, 정확한 판단과 치료는 의료진 상담이 필요합니다.",
         "bmi": bmi,
         "risks": risk_dicts,
         "plan": plan,

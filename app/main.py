@@ -10,7 +10,7 @@ from app.routers.account import router as account_router
 
 app = FastAPI(
     title="검진AI 리셋코치",
-    description="건강검진 기반 만성질환 위험예측 및 퍼스널 개선 플랜 웹앱 MVP",
+    description="건강검진 기반 만성질환 위험 신호 확인과 내 프로필 맞춤 행동 제안 웹앱",
     version="0.1.0",
 )
 

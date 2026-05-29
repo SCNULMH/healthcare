@@ -141,7 +141,7 @@
 
             <div class="screen-heading">
               <h2>최근 7일 활동량을 알려주세요</h2>
-              <p>웹앱 MVP에서는 직접 입력하고, 향후 HealthKit·Health Connect로 연동합니다.</p>
+              <p>지금은 직접 입력하고, 이후에는 HealthKit·Health Connect 연동으로 자동 입력을 넓혀갑니다.</p>
             </div>
 
             <article class="activity-card">
@@ -173,7 +173,7 @@
 
             <div class="screen-heading">
               <h2>식사와 생활패턴을 입력해 주세요</h2>
-              <p>추천 플랜은 극단적인 방식이 아니라 실천 가능한 작은 행동으로 제한됩니다.</p>
+              <p>무리한 목표보다 오늘 해볼 수 있는 작은 행동을 기준으로 제안합니다.</p>
             </div>
 
             <div class="card-grid">
@@ -217,19 +217,19 @@
               </article>
             </div>
 
-            <button class="primary wide bottom-cta" type="submit">AI 위험도 분석하기</button>
+            <button class="primary wide bottom-cta" type="submit">내 결과 확인하기</button>
           </section>
 
-          <section class="screen" id="screen-account" data-title="개인화">
+          <section class="screen" id="screen-account" data-title="개인 프로필">
             <div class="screen-heading">
-              <h2>계정과 개인화 데이터를 관리하세요</h2>
-              <p>로그인하면 분석 결과, 이전 진료기록, OCR 자동입력 흐름을 한 곳에서 이어갈 수 있습니다.</p>
+              <h2>계정과 내 정보를 관리하세요</h2>
+              <p>로그인하면 분석 결과, 이전 진료기록, 검진표 자동입력을 이어서 사용할 수 있습니다.</p>
             </div>
 
             <div class="account-card account-section">
               <div class="section-kicker">Account</div>
               <div class="card-title"><span class="icon-chip blue">👤</span><strong>계정 생성·로그인</strong></div>
-              <p id="account-status" class="muted">로그인하면 분석 결과와 이전 진료기록을 Firebase에 저장합니다.</p>
+              <p id="account-status" class="muted">로그인하면 분석 결과와 이전 진료기록을 안전하게 저장합니다.</p>
               <div id="account-auth-form" class="account-auth-form">
                 <label>이메일 <input id="account-email" type="email" placeholder="name@example.com" autocomplete="email" /></label>
                 <label>비밀번호 <input id="account-password" type="password" placeholder="8자 이상" autocomplete="current-password" /></label>
@@ -249,7 +249,7 @@
                 <button id="profile-load-basic" class="ghost small-button" type="button">불러오기</button>
               </div>
               <div class="card-grid compact">
-                <label>이름 <input id="profile-name" type="text" placeholder="선택" /></label>
+                <label>이름 <input id="profile-name" type="text" placeholder="선택 입력" /></label>
                 <label>출생연도 <input id="profile-birth-year" type="number" placeholder="예: 1985" /></label>
                 <label>성별
                   <select id="profile-sex">
@@ -258,13 +258,13 @@
                     <option value="female">여성</option>
                   </select>
                 </label>
-                <label>나이 <input id="profile-age" type="number" placeholder="기본정보에서 불러오기" /></label>
-                <label>키(cm) <input id="profile-height-cm" type="number" placeholder="기본정보에서 불러오기" /></label>
-                <label>체중(kg) <input id="profile-weight-kg" type="number" placeholder="기본정보에서 불러오기" /></label>
+                <label>나이 <input id="profile-age" type="number" placeholder="기본정보 불러오기" /></label>
+                <label>키(cm) <input id="profile-height-cm" type="number" placeholder="기본정보 불러오기" /></label>
+                <label>체중(kg) <input id="profile-weight-kg" type="number" placeholder="기본정보 불러오기" /></label>
                 <label>허리둘레(cm) <input id="profile-waist-cm" type="number" placeholder="모르면 비워두기" /></label>
               </div>
               <label>질환/복용약/알레르기 <input id="profile-medical-note" type="text" placeholder="예: 고혈압약 복용, 페니실린 알레르기" /></label>
-              <button id="profile-save" class="ghost wide" type="button">개인정보 저장</button>
+              <button id="profile-save" class="ghost wide" type="button">내 정보 저장</button>
             </div>
 
             <div class="account-card account-section">
@@ -278,7 +278,7 @@
               <div class="section-kicker">OCR</div>
               <div class="screen-heading">
                 <h2>검진 결과지 자동입력</h2>
-                <p>OCR 결과는 입력값으로 자동 반영한 뒤 검진 수치 화면으로 이동합니다. 사용자가 확인·수정한 다음 분석합니다.</p>
+                <p>읽어낸 값은 검진 수치 화면에 먼저 채웁니다. 분석 전에는 사용자가 한 번 더 확인합니다.</p>
               </div>
 
               <div class="upload-choice">
@@ -295,10 +295,10 @@
               </div>
 
               <input id="ocr-file" class="file-input" type="file" accept="image/*,.pdf" />
-              <button id="ocr-demo" class="primary wide" type="button">OCR 자동입력 실행</button>
+              <button id="ocr-demo" class="primary wide" type="button">검진표 값 불러오기</button>
               <div class="privacy-note">
                 <strong>개인정보 원칙</strong>
-                <p>업로드 원본은 영구 저장하지 않고, 외부 OCR API 사용 시에는 별도 동의를 받은 뒤 수치만 분석에 사용합니다.</p>
+                <p>업로드한 원본은 저장하지 않고, 필요한 수치만 분석에 사용합니다.</p>
               </div>
               <p id="ocr-status" class="muted"></p>
             </div>
@@ -308,7 +308,7 @@
             <section id="result" aria-live="polite">
               <div class="empty-result">
                 <h2>아직 분석 전입니다</h2>
-                <p>생활패턴 화면에서 `AI 위험도 분석하기`를 누르면 이 화면에 결과가 표시됩니다.</p>
+                <p>생활패턴 화면에서 `내 결과 확인하기`를 누르면 이 화면에 결과가 표시됩니다.</p>
                 <button class="primary wide" type="button" data-screen-target="lifestyle">입력하러 가기</button>
               </div>
             </section>
